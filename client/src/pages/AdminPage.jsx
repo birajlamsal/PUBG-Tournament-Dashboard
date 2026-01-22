@@ -1223,19 +1223,6 @@ const AdminPage = () => {
                   disabled={!selectedTournamentId}
                 />
               </label>
-              <label>
-                Status
-                <select
-                  value={teamRoster.status}
-                  onChange={(event) =>
-                    setTeamRoster((prev) => ({ ...prev, status: event.target.value }))
-                  }
-                >
-                  <option value="pending">Pending</option>
-                  <option value="confirmed">Confirmed</option>
-                  <option value="rejected">Rejected</option>
-                </select>
-              </label>
             </div>
             <div className="form-actions">
               <button

@@ -36,11 +36,33 @@ const request = async (apiKey, path) => {
   return response.json();
 };
 
+const mapNameMap = new Map([
+  ["Baltic_Main", "Erangel"],
+  ["Desert_Main", "Miramar"],
+  ["Tiger_Main", "Taego"],
+  ["Neon_Main", "Rondo"]
+]);
+
+const normalizeMapName = (mapName) => {
+  const cleaned = String(mapName || "").trim();
+  if (!cleaned) {
+    return null;
+  }
+  return mapNameMap.get(cleaned) || cleaned;
+};
+
 const placementPoints = (rank) => {
   if (!rank || rank < 1) {
     return 0;
   }
-  return Math.max(0, 17 - rank);
+  if (rank === 1) return 10;
+  if (rank === 2) return 6;
+  if (rank === 3) return 5;
+  if (rank === 4) return 4;
+  if (rank === 5) return 3;
+  if (rank === 6) return 2;
+  if (rank === 7 || rank === 8) return 1;
+  return 0;
 };
 
 const aggregateMatchPayloads = ({
@@ -91,6 +113,16 @@ const aggregateMatchPayloads = ({
         player_name: name,
         matches_played: 0,
         total_kills: 0,
+        assists: 0,
+        revives: 0,
+        deaths: 0,
+        death_reason: "Cannot determine",
+        _death_reason_counts: {
+          alive: 0,
+          killed: 0,
+          suicide: 0,
+          unknown: 0
+        },
         total_points: 0,
         avg_placement: 0,
         kd_ratio: 0,
@@ -100,11 +132,24 @@ const aggregateMatchPayloads = ({
       };
       current.matches_played += 1;
       current.total_kills += stats.kills || 0;
+      current.assists += stats.assists || 0;
+      current.revives += stats.revives || 0;
       current.damage += stats.damageDealt || 0;
       const rank = stats.winPlace || stats.rank || 0;
       current._placementTotal += rank;
       if (rank === 1) {
         current.wins += 1;
+      }
+      if (stats.deathType === "alive") {
+        current._death_reason_counts.alive += 1;
+      } else if (stats.deathType === "byplayer") {
+        current.deaths += 1;
+        current._death_reason_counts.killed += 1;
+      } else if (stats.deathType === "suicide") {
+        current.deaths += 1;
+        current._death_reason_counts.suicide += 1;
+      } else {
+        current._death_reason_counts.unknown += 1;
       }
       current.total_points += (stats.kills || 0) + placementPoints(rank);
       players.set(name, current);
@@ -155,7 +200,7 @@ const aggregateMatchPayloads = ({
 
     matches.push({
       match_id: match.data.id,
-      map_name: attributes.mapName,
+      map_name: normalizeMapName(attributes.mapName),
       game_mode: attributes.gameMode,
       created_at: attributes.createdAt,
       duration: attributes.duration,
@@ -182,12 +227,27 @@ const aggregateMatchPayloads = ({
       ? player._placementTotal / player.matches_played
       : 0;
     const kdRatio = player.matches_played ? player.total_kills / player.matches_played : 0;
+    const { alive, killed, suicide, unknown } = player._death_reason_counts || {};
+    let deathReason = "Cannot determine";
+    if (!unknown) {
+      if (alive > 0 && !killed && !suicide) {
+        deathReason = "alive";
+      } else if (killed > 0 && !suicide && !alive) {
+        deathReason = "killed";
+      } else if (suicide > 0 && !killed && !alive) {
+        deathReason = "suicide";
+      }
+    }
     return {
       ...player,
       avg_placement: Number(avgPlacement.toFixed(2)),
       kd_ratio: Number(kdRatio.toFixed(2)),
       total_points: Math.round(player.total_points),
-      damage: Math.round(player.damage)
+      damage: Math.round(player.damage),
+      assists: Math.round(player.assists || 0),
+      revives: Math.round(player.revives || 0),
+      deaths: Math.round(player.deaths || 0),
+      death_reason: deathReason
     };
   });
 
@@ -355,7 +415,7 @@ const fetchMatchSummaries = async ({ apiKey, matchIds }) => {
       match_id: match.data.id,
       is_custom_match: attrs.isCustomMatch === true,
       created_at: attrs.createdAt || null,
-      map_name: attrs.mapName || null,
+      map_name: normalizeMapName(attrs.mapName),
       game_mode: attrs.gameMode || null,
       match_type: attrs.matchType || null
     });

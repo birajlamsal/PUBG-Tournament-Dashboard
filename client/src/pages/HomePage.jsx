@@ -165,6 +165,7 @@ const HomePage = () => {
                     className="tournament-card"
                   >
                     <div className="card-top">
+                      <div className="card-image" aria-hidden="true" />
                       <span className={`status-badge ${tournament.status}`}>
                         {tournament.status}
                       </span>

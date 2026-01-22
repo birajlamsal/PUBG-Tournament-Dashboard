@@ -41,7 +41,20 @@
     "api_key_required": false,
     "tournament_api_key": "",
     "api_provider": "PUBG",
-    "pubg_tournament_id": ""
+    "pubg_tournament_id": "",
+    "custom_match_mode": true,
+    "allow_non_custom": false,
+    "custom_match_ids": [
+      "3d26f655-4a38-4534-894f-1e0290dc6fcb",
+      "2a52f5db-dd84-464f-b739-af92abf04cf8",
+      "c67c96a7-b20c-42f9-b6d0-833300ec8c16",
+      "55ff52bb-f01e-4816-866e-9fa9e7bcf0ee",
+      "1feb0015-ee11-4f1f-98d9-966099fb778f",
+      "b51c96d0-6184-4785-850f-94bac43332ee",
+      "910fcd87-7d01-4a2c-b9ff-0648ea99fa54",
+      "4324ba99-0947-4c9f-979d-018e843080a5"
+    ],
+    "match_type": "classic"
   },
   {
     "tournament_id": "TE12345",
@@ -61,10 +74,14 @@
     "region": "SEA",
     "rules": "Demo ruleset. Verified rosters required.",
     "contact_discord": "@demo_admin",
-    "api_key_required": false,
+    "api_key_required": true,
     "tournament_api_key": "",
     "api_provider": "PUBG",
-    "pubg_tournament_id": ""
+    "pubg_tournament_id": "",
+    "match_type": "classic",
+    "custom_match_mode": true,
+    "allow_non_custom": false,
+    "custom_match_ids": []
   },
   {
     "tournament_id": "TE53140",
@@ -99,7 +116,7 @@
   {
     "tournament_id": "TE69829",
     "name": "PUBG TRI-NATION TOURNAMENT",
-    "description": "",
+    "description": "Demo tournament for UI verification.",
     "banner_url": "",
     "start_date": "2026-01-09",
     "end_date": "2026-01-10",
@@ -133,21 +150,21 @@
     ]
   },
   {
-    "tournament_id": "TE62189",
-    "name": "Testtttt 1",
+    "tournament_id": "TE32792",
+    "name": "Vibe Coding jindabad",
     "description": "",
     "banner_url": "",
-    "start_date": "2026-01-21",
-    "end_date": "2026-01-23",
+    "start_date": "2026-01-22",
+    "end_date": "2026-01-28",
     "status": "ongoing",
-    "registration_status": "open",
+    "registration_status": "closed",
     "mode": "squad",
     "match_type": "classic",
     "perspective": "FPP",
-    "prize_pool": 0,
+    "prize_pool": 200,
     "registration_charge": 0,
     "featured": false,
-    "max_slots": null,
+    "max_slots": 25,
     "region": "SEA",
     "rules": "",
     "contact_discord": "",
@@ -158,9 +175,14 @@
     "custom_match_mode": true,
     "allow_non_custom": false,
     "custom_match_ids": [
-      "4324ba99-0947-4c9f-979d-018e843080a5",
+      "3d26f655-4a38-4534-894f-1e0290dc6fcb",
+      "2a52f5db-dd84-464f-b739-af92abf04cf8",
+      "c67c96a7-b20c-42f9-b6d0-833300ec8c16",
+      "55ff52bb-f01e-4816-866e-9fa9e7bcf0ee",
+      "1feb0015-ee11-4f1f-98d9-966099fb778f",
+      "b51c96d0-6184-4785-850f-94bac43332ee",
       "910fcd87-7d01-4a2c-b9ff-0648ea99fa54",
-      "b51c96d0-6184-4785-850f-94bac43332ee"
+      "4324ba99-0947-4c9f-979d-018e843080a5"
     ]
   }
 ]

@@ -10,6 +10,13 @@ import {
 } from "../api";
 import useReveal from "../hooks/useReveal";
 
+const mapImageByName = {
+  Erangel: "/images/maps/Erangel.png",
+  Miramar: "/images/maps/Miramar.png",
+  Taego: "/images/maps/Taego.png",
+  Rondo: "/images/maps/Rondo.png"
+};
+
 const TournamentDetailPage = () => {
   useReveal();
   const heroRef = useRef(null);
@@ -22,6 +29,7 @@ const TournamentDetailPage = () => {
   const [liveLoading, setLiveLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [resultTab, setResultTab] = useState("leaderboard");
+  const [openMatchId, setOpenMatchId] = useState(null);
   const [leaderboardSort, setLeaderboardSort] = useState({
     key: "slot_number",
     dir: "asc"
@@ -263,12 +271,12 @@ const TournamentDetailPage = () => {
     return playerStatsSource.map((player, index) => {
       const matchesPlayed = player.matches_played ?? 0;
       const totalKills = player.total_kills ?? 0;
-      const deaths =
-        player.deaths ?? (matchesPlayed ? Math.max(1, matchesPlayed) : 0);
+      const deaths = Number.isFinite(player.deaths) ? player.deaths : null;
       const avgKills =
         player.avg_kills ?? (matchesPlayed ? totalKills / matchesPlayed : 0);
       const avgDeaths =
-        player.avg_deaths ?? (matchesPlayed ? deaths / matchesPlayed : 0);
+        player.avg_deaths ??
+        (matchesPlayed && deaths !== null ? deaths / matchesPlayed : null);
       return {
         ...player,
         rank: index + 1,
@@ -276,7 +284,7 @@ const TournamentDetailPage = () => {
         revives: player.revives ?? 0,
         deaths,
         avg_kills: Number(avgKills.toFixed(2)),
-        avg_deaths: Number(avgDeaths.toFixed(2))
+        avg_deaths: avgDeaths === null ? null : Number(avgDeaths.toFixed(2))
       };
     });
   }, [playerStatsSource]);
@@ -396,16 +404,16 @@ const TournamentDetailPage = () => {
                 ({ teamId, players, slotNumber }) => (
                   <div key={teamId} className="group-card">
                     <div className="group-header">
-                      <div>
-                        <strong>
+                      <div className="group-title">
+                        <strong className="team-name">
                           {teamId === "Unassigned" ? "Unassigned" : teamMap.get(teamId) || teamId}
                         </strong>
-                        {slotNumber ? (
-                          <span className="muted">Slot #{slotNumber}</span>
-                        ) : (
-                          <span className="muted">No slot</span>
-                        )}
                       </div>
+                      {slotNumber ? (
+                        <span className="muted team-slot">Slot #{slotNumber}</span>
+                      ) : (
+                        <span className="muted team-slot">No slot</span>
+                      )}
                       <span className="muted">{players.length} players</span>
                     </div>
                     <ul className="participant-list">
@@ -413,7 +421,6 @@ const TournamentDetailPage = () => {
                         <li key={participant.participant_id}>
                           <span className="badge">player</span>
                           <span>{playerMap.get(participant.linked_player_id) || "-"}</span>
-                          <span className="muted">{participant.status}</span>
                         </li>
                       ))}
                     </ul>
@@ -523,38 +530,82 @@ const TournamentDetailPage = () => {
                 )}
 
                 {resultTab === "matches" && (
-                  <table className="stats-table leaderboard">
-                    <thead>
-                      <tr>
-                        <th>Match Details</th>
-                        <th>Map</th>
-                        <th>Champions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {liveLoading ? (
-                        <tr>
-                          <td colSpan="3" className="empty-cell">
-                            Loading PUBG matches...
-                          </td>
-                        </tr>
-                      ) : sortedMatches.length === 0 ? (
-                        <tr>
-                          <td colSpan="3" className="empty-cell">
-                            No matches available yet.
-                          </td>
-                        </tr>
-                      ) : (
-                        sortedMatches.map((match) => (
-                          <tr key={match.match_id}>
-                            <td>{match.match_detail}</td>
-                            <td>{match.map_name || "-"}</td>
-                            <td>{match.winner_team_name || "-"}</td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+                  <div className="match-results">
+                    {liveLoading ? (
+                      <div className="empty-cell">Loading PUBG matches...</div>
+                    ) : sortedMatches.length === 0 ? (
+                      <div className="empty-cell">No matches available yet.</div>
+                    ) : (
+                      sortedMatches.map((match, index) => (
+                        <div className="result-match-card" key={match.match_id}>
+                          <div className="match-row">
+                            <button
+                              type="button"
+                              className="match-toggle"
+                              aria-expanded={openMatchId === match.match_id}
+                              aria-controls={`match-details-${match.match_id}`}
+                              onClick={() =>
+                                setOpenMatchId((current) =>
+                                  current === match.match_id ? null : match.match_id
+                                )
+                              }
+                            >
+                              <span className="match-toggle-icon">›</span>
+                            </button>
+                            <h4>Match {index + 1}</h4>
+                            <div className="match-center">
+                              <span className="match-winner">
+                                {match.winner_team_name || "-"}
+                              </span>
+                            </div>
+                            <div className="match-right">
+                              <div
+                                className="map-box"
+                                aria-hidden="true"
+                                style={
+                                  mapImageByName[match.map_name]
+                                    ? { backgroundImage: `url(${mapImageByName[match.map_name]})` }
+                                    : undefined
+                                }
+                              >
+                                <span className="map-name">{match.map_name || "-"}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div
+                            id={`match-details-${match.match_id}`}
+                            className="match-dropdown-content"
+                            data-open={openMatchId === match.match_id}
+                          >
+                            <div>
+                              <span>Match ID</span>
+                              <strong>{match.match_id}</strong>
+                            </div>
+                            <div>
+                              <span>Map</span>
+                              <strong>{match.map_name || "-"}</strong>
+                            </div>
+                            <div>
+                              <span>Mode</span>
+                              <strong>{match.game_mode || "-"}</strong>
+                            </div>
+                            <div>
+                              <span>Created</span>
+                              <strong>
+                                {match.created_at
+                                  ? new Date(match.created_at).toLocaleString()
+                                  : "-"}
+                              </strong>
+                            </div>
+                            <div>
+                              <span>Winner</span>
+                              <strong>{match.winner_team_name || "-"}</strong>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 )}
 
                 {resultTab === "playerStats" && (
@@ -636,9 +687,9 @@ const TournamentDetailPage = () => {
                             <td>{player.total_kills ?? "-"}</td>
                             <td>{player.assists ?? "-"}</td>
                             <td>{player.revives ?? "-"}</td>
-                            <td>{player.deaths ?? "-"}</td>
+                            <td>{player.deaths ?? "Cannot determine"}</td>
                             <td>{player.avg_kills ?? "-"}</td>
-                            <td>{player.avg_deaths ?? "-"}</td>
+                            <td>{player.avg_deaths ?? "Cannot determine"}</td>
                             <td>{player.kd_ratio ?? "-"}</td>
                             <td>{player.total_points ?? "-"}</td>
                           </tr>
