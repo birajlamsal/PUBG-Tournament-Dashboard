@@ -57,6 +57,15 @@ a {
   padding-top: 16px;
 }
 
+.app--land {
+  padding-top: 0;
+}
+
+.app-content--land {
+  padding-left: 0;
+  padding-top: 0;
+}
+
 .site-header {
   display: flex;
   flex-direction: column;
