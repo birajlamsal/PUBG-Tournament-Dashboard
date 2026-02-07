@@ -105,6 +105,20 @@ const sanitizeTournament = (tournament) => {
   return rest;
 };
 
+const getTierFromPrize = (prize) => {
+  const value = Number(prize || 0);
+  if (value >= 1000) {
+    return "S";
+  }
+  if (value >= 500) {
+    return "A";
+  }
+  if (value >= 200) {
+    return "B";
+  }
+  return "C";
+};
+
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", time: new Date().toISOString() });
 });
@@ -422,6 +436,7 @@ app.post("/api/admin/tournaments", (req, res) => {
     mode: payload.mode || "squad",
     match_type: payload.match_type || "classic",
     perspective: payload.perspective || "TPP",
+    tier: payload.tier ? String(payload.tier).toUpperCase() : getTierFromPrize(payload.prize_pool),
     prize_pool: Number(payload.prize_pool || 0),
     registration_charge: Number(payload.registration_charge || 0),
     featured: ensureBoolean(payload.featured) === true,
@@ -463,6 +478,9 @@ app.put("/api/admin/tournaments/:id", (req, res) => {
   }
   const updated = updateById(tournaments, "tournament_id", id, (current) => {
     const next = { ...payload };
+    if (Object.prototype.hasOwnProperty.call(payload, "tier")) {
+      next.tier = payload.tier ? String(payload.tier).toUpperCase() : "";
+    }
     if (Object.prototype.hasOwnProperty.call(payload, "custom_match_mode")) {
       next.custom_match_mode = ensureBoolean(payload.custom_match_mode) === true;
     }

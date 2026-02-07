@@ -419,6 +419,10 @@ const TournamentDetailPage = () => {
   }, [tournament]);
 
   const tierLabel = useMemo(() => {
+    const tier = String(tournament?.tier || "").toUpperCase();
+    if (tier) {
+      return `${tier} Tier`;
+    }
     const prize = Number(tournament?.prize_pool || 0);
     if (prize >= 1000) {
       return "S Tier";

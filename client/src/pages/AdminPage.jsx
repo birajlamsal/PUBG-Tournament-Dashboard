@@ -35,6 +35,7 @@ const emptyTournament = {
   mode: "squad",
   match_type: "classic",
   perspective: "TPP",
+  tier: "C",
   prize_pool: "",
   registration_charge: "",
   featured: false,
@@ -580,6 +581,7 @@ const AdminPage = () => {
                       <th>Start Date</th>
                       <th>Days</th>
                       <th>Featured</th>
+                      <th>Tier</th>
                       <th>Region</th>
                       <th>Actions</th>
                     </tr>
@@ -597,6 +599,7 @@ const AdminPage = () => {
                         <td>{tournament.start_date || "-"}</td>
                         <td>{tournamentDays(tournament)}</td>
                         <td>{tournament.featured ? "Yes" : "No"}</td>
+                        <td>{tournament.tier || "-"}</td>
                         <td>{tournament.region || "-"}</td>
                         <td>
                           <div className="admin-list-actions">
@@ -828,6 +831,21 @@ const AdminPage = () => {
                           {region}
                         </option>
                       ))}
+                    </select>
+                  </label>
+                  <label>
+                    Tier
+                    <select
+                      value={tournamentForm.tier || ""}
+                      onChange={(event) =>
+                        setTournamentForm((prev) => ({ ...prev, tier: event.target.value }))
+                      }
+                    >
+                      <option value="">Select tier</option>
+                      <option value="S">S Tier</option>
+                      <option value="A">A Tier</option>
+                      <option value="B">B Tier</option>
+                      <option value="C">C Tier</option>
                     </select>
                   </label>
                   <label>

@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
+import LeftRail from "./components/LeftRail";
 import Footer from "./components/Footer";
 import ErrorBoundary from "./components/ErrorBoundary";
 import HomePage from "./pages/HomePage";
@@ -15,19 +16,24 @@ const App = () => {
   return (
     <div className="app">
       <Header />
-      <ErrorBoundary>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/tournaments" element={<TournamentsPage />} />
-          <Route path="/tournaments/:id" element={<TournamentDetailPage />} />
-          <Route path="/announcements" element={<AnnouncementsPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/matchidextract" element={<MatchIdExtractPage />} />
-          <Route path="/matchdetails" element={<MatchDetailDownloadPage />} />
-          <Route path="/admin" element={<AdminPage />} />
-        </Routes>
-      </ErrorBoundary>
-      <Footer />
+      <div className="app-shell">
+        <LeftRail />
+        <div className="app-content">
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/tournaments" element={<TournamentsPage />} />
+              <Route path="/tournaments/:id" element={<TournamentDetailPage />} />
+              <Route path="/announcements" element={<AnnouncementsPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/matchidextract" element={<MatchIdExtractPage />} />
+              <Route path="/matchdetails" element={<MatchDetailDownloadPage />} />
+              <Route path="/admin" element={<AdminPage />} />
+            </Routes>
+          </ErrorBoundary>
+          <Footer />
+        </div>
+      </div>
     </div>
   );
 };

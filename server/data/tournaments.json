@@ -18,7 +18,8 @@
     "contact_discord": "@sunrise_ops",
     "api_key_required": false,
     "tournament_api_key": "",
-    "api_provider": "PUBG"
+    "api_provider": "PUBG",
+    "tier": "A"
   },
   {
     "tournament_id": "TE38127",
@@ -54,7 +55,8 @@
       "910fcd87-7d01-4a2c-b9ff-0648ea99fa54",
       "4324ba99-0947-4c9f-979d-018e843080a5"
     ],
-    "match_type": "classic"
+    "match_type": "classic",
+    "tier": "B"
   },
   {
     "tournament_id": "TE12345",
@@ -81,7 +83,8 @@
     "match_type": "classic",
     "custom_match_mode": true,
     "allow_non_custom": false,
-    "custom_match_ids": []
+    "custom_match_ids": [],
+    "tier": "A"
   },
   {
     "tournament_id": "TE53140",
@@ -111,7 +114,8 @@
     "custom_match_ids": [
       "50c92417-9337-4af8-b36d-707f0ac0af46"
     ],
-    "match_type": "classic"
+    "match_type": "classic",
+    "tier": "S"
   },
   {
     "tournament_id": "TE69829",
@@ -147,7 +151,8 @@
       "b51c96d0-6184-4785-850f-94bac43332ee",
       "910fcd87-7d01-4a2c-b9ff-0648ea99fa54",
       "4324ba99-0947-4c9f-979d-018e843080a5"
-    ]
+    ],
+    "tier": "C"
   },
   {
     "tournament_id": "TE32792",
@@ -183,6 +188,7 @@
       "b51c96d0-6184-4785-850f-94bac43332ee",
       "910fcd87-7d01-4a2c-b9ff-0648ea99fa54",
       "4324ba99-0947-4c9f-979d-018e843080a5"
-    ]
+    ],
+    "tier": "B"
   }
 ]

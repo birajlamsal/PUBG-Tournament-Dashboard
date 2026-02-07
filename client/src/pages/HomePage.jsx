@@ -1,327 +1,230 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import gsap from "gsap";
-import { Link } from "react-router-dom";
-import useEmblaCarousel from "embla-carousel-react";
-import {
-  fetchAnnouncements,
-  fetchFeaturedTournaments,
-  fetchTournaments,
-  fetchUpcomingMatches
-} from "../api";
-import useReveal from "../hooks/useReveal";
+import { useEffect, useState } from "react";
+import { fetchAnnouncements } from "../api";
+
+const ongoing = [
+  {
+    name: "NAIZA CUP",
+    region: "EU",
+    platform: "PC",
+    mode: "SQUAD",
+    prize: "$5,000",
+    status: "ONGOING"
+  },
+  {
+    name: "SUPER LEAGUE SERIES",
+    region: "NA",
+    platform: "PC",
+    mode: "SQUAD",
+    prize: "$3,000",
+    status: "ONGOING"
+  },
+  {
+    name: "TACO TUESDAY LEAGUE",
+    region: "NA",
+    platform: "PC",
+    mode: "SQUAD",
+    prize: "$2,500",
+    status: "LIVE"
+  }
+];
+
+const past = Array.from({ length: 14 }).map((_, i) => ({
+  name: `CAXA CUP ${26 - i}`,
+  region: i % 2 ? "EU" : "NA",
+  platform: "PC",
+  mode: i % 3 === 0 ? "DUO" : "SQUAD",
+  prize: i % 4 === 0 ? "$1,500" : "$700",
+  status: "UPCOMING"
+}));
+
+const upcoming = past[0];
 
 const HomePage = () => {
-  const heroRef = useRef(null);
-  const countersRef = useRef([]);
-  useReveal();
-
-  const [tournaments, setTournaments] = useState([]);
-  const [featured, setFeatured] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
-  const [upcomingMatches, setUpcomingMatches] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [emblaRef] = useEmblaCarousel({
-    dragFree: true,
-    containScroll: "trimSnaps",
-    align: "start"
-  });
+  const [announcementsLoading, setAnnouncementsLoading] = useState(true);
 
   useEffect(() => {
-    const load = async () => {
+    const loadAnnouncements = async () => {
       try {
-        const [tournamentsData, featuredData, announcementsData, upcomingData] =
-          await Promise.all([
-            fetchTournaments(),
-            fetchFeaturedTournaments(),
-            fetchAnnouncements(),
-            fetchUpcomingMatches()
-          ]);
-        setTournaments(tournamentsData);
-        setFeatured(featuredData);
-        setAnnouncements(announcementsData);
-        setUpcomingMatches(upcomingData);
+        const data = await fetchAnnouncements();
+        setAnnouncements(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error(error);
       } finally {
-        setLoading(false);
+        setAnnouncementsLoading(false);
       }
     };
-    load();
+    loadAnnouncements();
   }, []);
-
-  useEffect(() => {
-    if (!heroRef.current) {
-      return;
-    }
-    const timeline = gsap.timeline();
-    timeline
-      .fromTo(
-        heroRef.current.querySelector(".hero-title"),
-        { y: 40, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" }
-      )
-      .fromTo(
-        heroRef.current.querySelector(".hero-subtitle"),
-        { y: 20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.6, ease: "power3.out" },
-        "-=0.4"
-      )
-      .fromTo(
-        heroRef.current.querySelector(".hero-actions"),
-        { y: 16, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.5 },
-        "-=0.3"
-      );
-  }, []);
-
-  useEffect(() => {
-    if (!countersRef.current.length || !tournaments.length) {
-      return;
-    }
-    countersRef.current.forEach((el) => {
-      const target = Number(el.dataset.count || 0);
-      gsap.fromTo(
-        el,
-        { textContent: 0 },
-        {
-          textContent: target,
-          duration: 1.4,
-          ease: "power1.out",
-          snap: { textContent: 1 }
-        }
-      );
-    });
-  }, [tournaments]);
-
-  const counters = useMemo(() => {
-    const ongoing = tournaments.filter((item) => item.status === "ongoing").length;
-    const upcoming = tournaments.filter((item) => item.status === "upcoming").length;
-    const completed = tournaments.filter((item) => item.status === "completed").length;
-    const open = tournaments.filter(
-      (item) => item.registration_status === "open"
-    ).length;
-    return [
-      { label: "Ongoing", value: ongoing },
-      { label: "Upcoming", value: upcoming },
-      { label: "Completed", value: completed },
-      { label: "Open Slots", value: open }
-    ];
-  }, [tournaments]);
-
-  const ongoingTournaments = useMemo(
-    () => tournaments.filter((item) => item.status === "ongoing"),
-    [tournaments]
-  );
-
-  const upcomingTournaments = useMemo(
-    () => tournaments.filter((item) => item.status === "upcoming"),
-    [tournaments]
-  );
-
-  const highlightTournament = useMemo(() => {
-    return featured[0] || upcomingTournaments[0] || tournaments[0] || null;
-  }, [featured, upcomingTournaments, tournaments]);
-
-  const featuredRow = useMemo(() => {
-    return [...ongoingTournaments, ...upcomingTournaments].slice(0, 8);
-  }, [ongoingTournaments, upcomingTournaments]);
-
-  const latestNews = useMemo(() => announcements.slice(0, 6), [announcements]);
 
   return (
-    <main className="home-page">
-      <section className="hero hub-hero" ref={heroRef}>
-        <div className="hero-bg" />
-        <div className="hero-content">
-          <span className="hero-tag">PUBG PC Hub</span>
-          <h1 className="hero-title">PUBG Hub</h1>
-          <p className="hero-subtitle">
-            Live tournament tracking, verified rosters, and match-ready insights
-            built for competitive squads.
-          </p>
-          <div className="hero-actions">
-            <Link to="/tournaments" className="primary-button">
-              Explore Tournaments
-            </Link>
-            <Link to="/contact" className="ghost-button">
-              Reach the Team
-            </Link>
-          </div>
-        </div>
-        <div className="hero-counters reveal">
-          {counters.map((counter, index) => (
-            <div className="counter-card" key={counter.label}>
-              <span
-                className="counter-value"
-                ref={(el) => {
-                  countersRef.current[index] = el;
-                }}
-                data-count={counter.value}
-              >
-                0
-              </span>
-              <span className="counter-label">{counter.label}</span>
-            </div>
-          ))}
-        </div>
-      </section>
+    <div className="twire-page">
+      <div className="twire-container">
+        <div className="twire-layout">
+          <div className="twire-content">
+            <main className="twire-main">
+              <div>
+                <SectionTitle title="Ongoing tournaments" />
 
-      <section className="section reveal">
-        <div className="section-header">
-          <h2>Ongoing & Upcoming Tournaments</h2>
-          <Link to="/tournaments">View all</Link>
-        </div>
-        {loading && (
-          <div className="card-grid">
-            <SkeletonCards count={4} />
-          </div>
-        )}
-        {!loading && featuredRow.length === 0 && (
-          <EmptyState message="No tournaments available right now." />
-        )}
-        {!loading && featuredRow.length > 0 && (
-          <div className="embla scroll-row" ref={emblaRef}>
-            <div className="embla__container">
-              {featuredRow.map((tournament) => (
-                <div className="embla__slide" key={tournament.tournament_id}>
-                  <Link
-                    to={`/tournaments/${tournament.tournament_id}`}
-                    className="tournament-card"
-                  >
-                    <div className="card-top">
-                      <div className="card-image" aria-hidden="true" />
-                      <span className={`status-badge ${tournament.status}`}>
-                        {tournament.status}
-                      </span>
-                      <h3>{tournament.name}</h3>
-                      <p>{tournament.description || "Details coming soon."}</p>
-                    </div>
-                    <div className="card-bottom">
-                      <div>
-                        <span>Prize Pool</span>
-                        <strong>${tournament.prize_pool}</strong>
-                      </div>
-                      <div>
-                        <span>Region</span>
-                        <strong>{tournament.region || "-"}</strong>
-                      </div>
-                    </div>
-                  </Link>
+                <div className="twire-panel">
+                  {ongoing.map((t, idx) => (
+                    <TournamentRow
+                      key={t.name}
+                      t={t}
+                      isLast={idx === ongoing.length - 1}
+                    />
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </section>
+              </div>
 
-      <section className="section reveal highlight-grid">
-        <div className="highlight-card">
-          <div className="highlight-glow" />
-          <div className="highlight-content">
-            <span className="chip">Featured Spotlight</span>
-            <h2>{highlightTournament?.name || "Featured Tournament"}</h2>
-            <p>
-              {highlightTournament?.description ||
-                "Featured tournaments highlight the best squads, tightest schedules, and highest stakes."}
-            </p>
-            <div className="highlight-meta">
-              <div>
-                <span>Prize Pool</span>
-                <strong>${highlightTournament?.prize_pool ?? "-"}</strong>
+              <div className="twire-title-row">
+                <SectionTitle title="Upcoming tournament" />
               </div>
-              <div>
-                <span>Dates</span>
-                <strong>
-                  {highlightTournament?.start_date || "-"} •{" "}
-                  {highlightTournament?.end_date || "-"}
-                </strong>
-              </div>
-              <div>
-                <span>Status</span>
-                <strong>{highlightTournament?.status || "-"}</strong>
-              </div>
-            </div>
-            <Link
-              to={
-                highlightTournament
-                  ? `/tournaments/${highlightTournament.tournament_id}`
-                  : "/tournaments"
-              }
-              className="primary-button"
-            >
-              View details
-            </Link>
-          </div>
-        </div>
 
-        <div className="highlight-aside">
-          <div className="section-header">
-            <h2>Upcoming Match Schedule</h2>
-          </div>
-          <div className="stacked-cards">
-            {loading && <SkeletonCards count={2} />}
-            {!loading && upcomingMatches.length === 0 && (
-              <EmptyState message="No upcoming matches scheduled." />
-            )}
-            {!loading &&
-              upcomingMatches.map((match) => (
-                <div key={match.match_id} className="schedule-card">
-                  <div>
-                    <h4>{match.match_name}</h4>
-                    <span className="muted">{match.tournament_name}</span>
+              {upcoming ? (
+                <div className="twire-panel">
+                  <TournamentRow t={upcoming} isLast />
+                </div>
+              ) : (
+                <div className="twire-empty">No upcoming tournaments.</div>
+              )}
+
+              <div className="twire-title-row">
+                <SectionTitle title="Past tournaments" />
+                <button className="twire-link">View more</button>
+              </div>
+
+              <div className="twire-panel">
+                {past.slice(1).map((t, idx) => (
+                  <TournamentRow
+                    key={`${t.name}-${idx}`}
+                    t={t}
+                    isLast={idx === past.length - 2}
+                  />
+                ))}
+              </div>
+            </main>
+
+            <aside className="twire-aside">
+              <div className="twire-panel twire-panel--pad">
+                <div className="twire-panel-head">
+                  <h3>Notices & announcements</h3>
+                </div>
+
+                <div className="twire-stack">
+                  {announcementsLoading && (
+                    <div className="twire-muted">Loading announcements...</div>
+                  )}
+                  {!announcementsLoading && announcements.length === 0 && (
+                    <div className="twire-muted">No announcements yet.</div>
+                  )}
+                  {!announcementsLoading &&
+                    announcements.slice(0, 6).map((n) => (
+                      <NewsCard key={n.announcement_id || n.title} n={n} />
+                    ))}
+                </div>
+              </div>
+
+            </aside>
+
+            <aside className="twire-aside twire-aside--tight">
+              <div className="twire-panel twire-panel--pad">
+                <div className="twire-panel-head">
+                  <h3>Play featured tournament</h3>
+                </div>
+                <div className="twire-featured">
+                  <div className="twire-featured__title">Global Clash Invitational</div>
+                  <div className="twire-featured__meta">
+                    <span>Prize: $10,000</span>
+                    <span>Starts: Feb 18</span>
                   </div>
-                  <div>
-                    <span>{new Date(match.match_time).toLocaleString()}</span>
-                    <span className="badge">{match.lobby}</span>
-                  </div>
+                  <button className="twire-cta twire-cta--full">Join now</button>
                 </div>
-              ))}
+              </div>
+
+            </aside>
           </div>
         </div>
-      </section>
-
-      <section className="section reveal">
-        <div className="section-header">
-          <h2>Latest News</h2>
-          <Link to="/announcements">View all</Link>
-        </div>
-        <div className="card-grid news-grid">
-          {loading && <SkeletonCards count={3} />}
-          {!loading && latestNews.length === 0 && (
-            <EmptyState message="No announcements yet." />
-          )}
-          {!loading &&
-            latestNews.map((note) => (
-              <div className="announcement-card news-card" key={note.announcement_id}>
-                <div className="news-card__header">
-                  <span className="badge">{note.type}</span>
-                  <span className="muted">
-                    {new Date(note.created_at).toLocaleDateString()}
-                  </span>
-                </div>
-                <h3>{note.title}</h3>
-                <p>{note.body}</p>
-                <Link to="/announcements" className="text-button">
-                  Read update
-                </Link>
-              </div>
-            ))}
-        </div>
-      </section>
-    </main>
+      </div>
+    </div>
   );
 };
 
-const SkeletonCards = ({ count = 3 }) => (
-  <>
-    {Array.from({ length: count }).map((_, index) => (
-      <div key={index} className="skeleton-card" />
-    ))}
-  </>
-);
+const SectionTitle = ({ title }) => {
+  return (
+    <div className="twire-title">
+      <span className="twire-title__dot" />
+      <h2>{title}</h2>
+    </div>
+  );
+};
 
-const EmptyState = ({ message }) => (
-  <div className="empty-state">{message}</div>
-);
+const StatusPill = ({ status }) => {
+  const base = "twire-pill";
+  if (status === "LIVE") {
+    return <span className={`${base} is-live`}>Live</span>;
+  }
+  if (status === "ONGOING") {
+    return <span className={`${base} is-ongoing`}>Ongoing</span>;
+  }
+  return <span className={`${base} is-upcoming`}>Upcoming</span>;
+};
+
+const TournamentRow = ({ t, isLast }) => {
+  return (
+    <div className={`twire-row ${isLast ? "" : "twire-row--line"}`}>
+      <div className="twire-row__logo">
+        <div className="twire-row__logo-mark" />
+      </div>
+
+      <div className="twire-row__info">
+        <div className="twire-row__title">
+          <div className="twire-row__name">{t.name}</div>
+          <StatusPill status={t.status} />
+        </div>
+        <div className="twire-row__meta">
+          <span>{t.region}</span>
+          <span className="twire-row__dot" />
+          <span>{t.platform}</span>
+          <span className="twire-row__dot" />
+          <span>{t.mode}</span>
+          <span className="twire-row__dot" />
+          <span>{t.prize}</span>
+        </div>
+      </div>
+
+      <div className="twire-row__actions">
+        <span className="twire-row__hint">
+          {t.status === "LIVE" ? "Now" : "Details"}
+        </span>
+        <button className="twire-cta">Details</button>
+      </div>
+    </div>
+  );
+};
+
+const NewsCard = ({ n }) => {
+  const createdAt = n?.created_at
+    ? new Date(n.created_at).toLocaleDateString()
+    : "";
+  const tag = n?.type || "Notice";
+  const title = n?.title || "Announcement";
+  const body = n?.body || "";
+
+  return (
+    <div className="twire-news">
+      <div className="twire-news__thumb" />
+      <div className="twire-news__body">
+        <div className="twire-news__title">{title}</div>
+        {body && <div className="twire-news__desc">{body}</div>}
+        <div className="twire-news__meta">
+          <span className="twire-tag">{tag}</span>
+          <span>•</span>
+          <span>{createdAt || "Just now"}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default HomePage;
