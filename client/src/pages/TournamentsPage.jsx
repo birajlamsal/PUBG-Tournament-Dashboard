@@ -39,6 +39,26 @@ const TournamentsPage = () => {
     load();
   }, [filters.search, filters.status, filters.registration, filters.mode, filters.sort]);
 
+  const getTierCode = (tournament) => {
+    const tier = String(tournament.tier || "").toUpperCase();
+    if (tier) {
+      return tier;
+    }
+    const prize = Number(tournament.prize_pool || 0);
+    if (prize >= 1000) {
+      return "S";
+    }
+    if (prize >= 500) {
+      return "A";
+    }
+    if (prize >= 200) {
+      return "B";
+    }
+    return "C";
+  };
+
+  const getTierLabel = (tournament) => `${getTierCode(tournament)} Tier`;
+
   const visible = useMemo(() => {
     return tournaments.filter((item) => {
       if (filters.search) {
@@ -60,10 +80,7 @@ const TournamentsPage = () => {
         return false;
       }
       if (filters.tier) {
-        const prize = Number(item.prize_pool || 0);
-        const tier =
-          prize >= 1000 ? "S" : prize >= 500 ? "A" : prize >= 200 ? "B" : "C";
-        if (tier !== filters.tier) {
+        if (getTierCode(item) !== filters.tier) {
           return false;
         }
       }
@@ -227,18 +244,7 @@ const TournamentsPage = () => {
                   <p>{tournament.description || "Details coming soon."}</p>
                   <div className="card-tags">
                     <span className="chip">{tournament.region || "Global"}</span>
-                    <span className="chip">
-                      {(() => {
-                        const prize = Number(tournament.prize_pool || 0);
-                        return prize >= 1000
-                          ? "S Tier"
-                          : prize >= 500
-                          ? "A Tier"
-                          : prize >= 200
-                          ? "B Tier"
-                          : "C Tier";
-                      })()}
-                    </span>
+                    <span className="chip">{getTierLabel(tournament)}</span>
                   </div>
                 </div>
                 <div className="card-meta">
