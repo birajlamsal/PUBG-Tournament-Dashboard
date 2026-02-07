@@ -59,8 +59,8 @@ const Header = () => {
 
   return (
     <header className="twire-header">
-      <div className="twire-header__inner">
-        <div className="twire-brand">
+      <div className="twire-header__inner twire-header__grid">
+        <div className="twire-brand twire-brand--grid">
           <img
             className="twire-brand__icon"
             src="/logo/noBG_Logo.png"
@@ -72,59 +72,53 @@ const Header = () => {
           </div>
         </div>
 
-        <>
-          <button
-            className="game-switcher__button"
-            type="button"
-            aria-expanded={isOpen}
-            aria-haspopup="menu"
-            onClick={() => setIsOpen((prev) => !prev)}
-            onKeyDown={onKeyDown}
-            ref={buttonRef}
+        <button
+          className="game-switcher__button game-switcher__button--grid"
+          type="button"
+          aria-expanded={isOpen}
+          aria-haspopup="menu"
+          onClick={() => setIsOpen((prev) => !prev)}
+          onKeyDown={onKeyDown}
+          ref={buttonRef}
+        >
+          <img
+            className="game-switcher__logo"
+            src="/logo/PUBG_PC_LOGO.png"
+            alt="PUBG"
+          />
+          <ChevronDown className="game-switcher__chevron" />
+        </button>
+        {isOpen && (
+          <div
+            className="game-switcher__menu"
+            role="menu"
+            style={{ top: menuPosition.top, left: menuPosition.left }}
           >
-            <img
-              className="game-switcher__logo"
-              src="/logo/PUBG_PC_LOGO.png"
-              alt="PUBG"
-            />
-            <ChevronDown className="game-switcher__chevron" />
-          </button>
-          {isOpen && (
-            <div
-              className="game-switcher__menu"
-              role="menu"
-              style={{ top: menuPosition.top, left: menuPosition.left }}
-            >
-              {GAMES.map((game) => (
-                <button
-                  key={game.id}
-                  type="button"
-                  className="game-switcher__item"
-                  role="menuitem"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <span className="game-switcher__item-icon">
-                    {game.icon ? <img src={game.icon} alt="" /> : game.label[0]}
-                  </span>
-                  <span>{game.label}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </>
+            {GAMES.map((game) => (
+              <button
+                key={game.id}
+                type="button"
+                className="game-switcher__item"
+                role="menuitem"
+                onClick={() => setIsOpen(false)}
+              >
+                <span className="game-switcher__item-icon">
+                  {game.icon ? <img src={game.icon} alt="" /> : game.label[0]}
+                </span>
+                <span>{game.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
-        <div className="twire-search">
+        <div className="twire-search twire-search--grid">
           <Search className="twire-icon" />
           <input placeholder="Search tournaments, teams..." />
         </div>
 
-        <a className="twire-contact" href="/contact">
+        <a className="twire-contact twire-contact--desktop" href="/contact">
           Contact us
         </a>
-
-        <button className="twire-lang" type="button" aria-label="Language">
-          EN
-        </button>
       </div>
     </header>
   );

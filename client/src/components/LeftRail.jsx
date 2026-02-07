@@ -1,17 +1,9 @@
 import { NavLink } from "react-router-dom";
-import {
-  Flame,
-  Trophy,
-  Newspaper,
-  Swords,
-  Users,
-  BarChart3,
-  Gamepad2
-} from "lucide-react";
+import { Home, Trophy, Newspaper, Swords, Users } from "lucide-react";
 
 const LeftRail = () => {
   const items = [
-    { icon: Flame, label: "Home", to: "/" },
+    { icon: Home, label: "Home", to: "/" },
     { icon: Trophy, label: "Tournaments", to: "/tournaments" },
     { icon: Swords, label: "Scrims", to: "/scrims" },
     { icon: Newspaper, label: "News", to: "/announcements" },

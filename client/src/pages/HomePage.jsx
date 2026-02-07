@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { fetchAnnouncements, fetchTournaments } from "../api";
 
 const HomePage = () => {
@@ -97,7 +98,9 @@ const HomePage = () => {
 
               <div className="twire-title-row">
                 <SectionTitle title="Past tournaments" />
-                <button className="twire-link">View more</button>
+                <Link className="twire-link" to="/tournaments">
+                  View more
+                </Link>
               </div>
 
               <div className="twire-panel">
@@ -156,20 +159,6 @@ const SectionTitle = ({ title }) => {
   );
 };
 
-const StatusPill = ({ status }) => {
-  const base = "twire-pill";
-  if (status === "live") {
-    return <span className={`${base} is-live`}>Live</span>;
-  }
-  if (status === "ongoing") {
-    return <span className={`${base} is-ongoing`}>Ongoing</span>;
-  }
-  if (status === "completed") {
-    return <span className={`${base} is-completed`}>Completed</span>;
-  }
-  return <span className={`${base} is-upcoming`}>Upcoming</span>;
-};
-
 const TournamentRow = ({ t, isLast }) => {
   const status = String(t.status || "").toLowerCase();
   const displayMode = String(t.mode || "").toUpperCase();
@@ -188,7 +177,6 @@ const TournamentRow = ({ t, isLast }) => {
       <div className="twire-row__info">
         <div className="twire-row__title">
           <div className="twire-row__name">{t.name}</div>
-          <StatusPill status={status} />
         </div>
         <div className="twire-row__meta">
           <span>{displayRegion}</span>
@@ -202,10 +190,15 @@ const TournamentRow = ({ t, isLast }) => {
       </div>
 
       <div className="twire-row__actions">
-        <span className="twire-row__hint">
-          {status === "live" ? "Now" : "Details"}
-        </span>
-        <button className="twire-cta">Details</button>
+        {t.tournament_id ? (
+          <Link className="twire-cta" to={`/tournaments/${t.tournament_id}`}>
+            Details
+          </Link>
+        ) : (
+          <button className="twire-cta" type="button">
+            Details
+          </button>
+        )}
       </div>
     </div>
   );
