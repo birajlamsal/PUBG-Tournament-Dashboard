@@ -1,74 +1,78 @@
-📊 PUBG Tournament Dashboard
-🔥 Overview
+📊 ApexGrid — Multi‑Game Tournament Platform
 
-PUBG Tournament Dashboard is a powerful, user-friendly platform for organizing, tracking, and visualizing PUBG tournament data for your teams and friends. Whether you're running casual competitions or community events, this project gives you a streamlined toolset to manage participants, match results, standings, and more — all in one place.
+Overview
+ApexGrid is a full‑stack multi‑game tournament platform with a game‑selection landing page, tournament + scrims management, live leaderboard views, and an admin console. It’s designed for community events and competitive leagues with a clean, esports‑style UI.
 
-🚀 Features
+Key Features
+- Landing page with game selection (default route)
+- Game dashboards (tournaments, scrims, news, stats)
+- Admin console for tournaments + scrims + players + teams + announcements
+- Live match aggregation via PUBG API (optional)
+- Postgres storage for match payloads + normalized stats (optional)
 
-✨ Real-Time Leaderboards – Automatically sort and display competitive rankings.
-📅 Tournament Scheduling – Create and manage multiple match events with ease.
-👥 Player & Team Profiles – Track individual and team stats across tournaments.
-📊 Match Result Analytics – Gain insights from wins, kills, and performance trends.
-🎮 Frontend + Backend Stack – Full full-stack solution for plug-and-play use.
+Routes
+- `/` — Landing (game selection)
+- `/pubg` — PUBG home dashboard (current live game)
+- `/pubg/tournaments` — Tournaments list
+- `/pubg/tournaments/:id` — Tournament details
+- `/pubg/scrims` — Scrims list
+- `/pubg/scrims/:id` — Scrim details
+- `/pubg/announcements` — Notices & announcements
+- `/pubg/contact` — Contact page
+- `/pubg/admin` — Admin console
+- `*` — Custom 404 page
 
-🧠 Why Use This Dashboard?
+Tech Stack
+- Frontend: React 18, Vite, React Router
+- Backend: Node.js, Express
+- Database: Postgres (`pg`) for match data (optional)
+- Auth: JWT (admin login)
 
-This project is perfect if you want to:
-
-Quickly set up tournament tracking for PUBG events.
-
-Keep an online record of competitive results.
-
-Share live leaderboards with your community or team.
-
-Customize your event format and scoring system.
-
-🛠 Project Structure
-├── client/             # Frontend app (UI)
+Project Structure
+├── client/             # Frontend app (Vite)
 ├── server/             # API + backend logic
-├── data/               # Sample data or match info
-├── README.md           # Project documentation
-├── LICENSE             # Open source license
-├── package.json        # Dependencies & scripts
+├── server/data/        # JSON storage for admin data
+├── PUBG/               # PUBG assets + data + schema
+│   ├── Logo/           # Brand assets
+│   ├── Images/         # Static images
+│   ├── match_data_raw/ # Raw match payloads
+│   └── schema/         # Reference SQL/DBML schema
+├── GameLogo/           # Source game logos
+├── README.md
+├── LICENSE
+├── package.json
 
-🧩 Getting Started
-🏁 1. Install
+Getting Started
+1) Install
+```
 npm install
 npm --prefix server install
+npm --prefix client install
+```
 
-⚙️ 2. Configure
+2) Configure
+Create `server/.env` (or update it) with at least:
+```
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=admin
+JWT_SECRET=change_me_super_secret
+PUBG_API_KEY=your_pubg_key
+DATABASE_URL=postgresql://user:pass@localhost:5432/pubg_tracker
+```
 
-Copy and customize the server environment file:
-
-cp server/.env.example server/.env
-
-
-Update values like database path or API config in the .env file.
-
-🏃‍♂️ 3. Run Locally
-
-Start development server:
-
+3) Run locally
+```
 npm run dev
+```
 
+Default ports:
+- API: http://localhost:5000
+- Client: http://localhost:5173
 
-Your local server will start (typically on http://localhost:5000) and the frontend will run at another port (usually http://localhost:5173).
+Notes
+- The client proxies `/api` to `http://localhost:5000` via Vite.
+- Admin data (tournaments/scrims/players/teams) is stored in `server/data/*.json`.
+- Match payloads and stats are stored in Postgres when `DATABASE_URL` is set.
 
-📇 Contributions Welcome
-
-Contributions are highly appreciated! Whether it's bug fixes, feature ideas, or UI improvements — your help makes this project better.
-
-Fork the repository
-
-Create a feature branch
-
-Submit a pull request
-
-📜 License
-
-This project is open-source under the MIT License.
-See the LICENSE file for more details.
-
-🧠 Want to Learn More?
-
-If this project helped you build something awesome or you want to see future improvements, feel free to ⭐ the repo!
+License
+MIT — see `LICENSE`.
