@@ -15,6 +15,7 @@ import LandPage from "./pages/LandPage";
 import NotFound from "./pages/NotFound";
 import ScrimsPage from "./pages/ScrimsPage";
 import ScrimDetailPage from "./pages/ScrimDetailPage";
+import CheckPage from "./pages/CheckPage";
 
 const App = () => {
   const location = useLocation();
@@ -42,6 +43,7 @@ const App = () => {
               <Route path="/pubg/matchdetails" element={<MatchDetailDownloadPage />} />
               <Route path="/pubg/admin" element={<AdminPage />} />
               <Route path="/admin" element={<AdminPage />} />
+              <Route path="/check" element={<CheckPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </ErrorBoundary>

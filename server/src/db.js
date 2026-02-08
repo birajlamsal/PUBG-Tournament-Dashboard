@@ -18,6 +18,9 @@ const initDb = async () => {
   if (!dbEnabled || !pool) {
     throw new Error("DATABASE_URL is not configured for Postgres");
   }
+  if (process.env.DB_AUTO_MIGRATE !== "true") {
+    return;
+  }
   await pool.query(`
     CREATE TABLE IF NOT EXISTS matches (
       match_id TEXT PRIMARY KEY,
@@ -435,6 +438,18 @@ const getTournamentMatchIds = async (tournamentId) => {
   return result.rows.map((row) => row.match_id).filter(Boolean);
 };
 
+const testDb = async () => {
+  if (!pool) {
+    return { connected: false };
+  }
+  try {
+    await pool.query("SELECT 1");
+    return { connected: true };
+  } catch (error) {
+    return { connected: false, error: error.message };
+  }
+};
+
 module.exports = {
   dbEnabled,
   initDb,
@@ -443,5 +458,6 @@ module.exports = {
   upsertMatches,
   upsertNormalizedMatch,
   linkTournamentMatches,
-  getTournamentMatchIds
+  getTournamentMatchIds,
+  testDb
 };

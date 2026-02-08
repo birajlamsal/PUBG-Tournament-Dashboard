@@ -21,7 +21,8 @@ const {
   getMatchesByIds,
   upsertMatches,
   linkTournamentMatches,
-  getTournamentMatchIds
+  getTournamentMatchIds,
+  testDb
 } = require("./db");
 
 const app = express();
@@ -124,10 +125,6 @@ const getTierFromPrize = (prize) => {
   return "C";
 };
 
-app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", time: new Date().toISOString() });
-});
-
 app.get("/api/pubg/player-matches", async (req, res) => {
   const apiKey = process.env.PUBG_API_KEY;
   if (!apiKey) {
@@ -209,6 +206,17 @@ app.get("/api/featured-tournaments", (req, res) => {
     .filter((item) => item.featured === true)
     .map(sanitizeTournament);
   res.json(featured);
+});
+
+app.get("/api/health", async (req, res) => {
+  const dbStatus = await testDb();
+  res.json({
+    status: "ok",
+    db: {
+      enabled: dbEnabled,
+      ...dbStatus
+    }
+  });
 });
 
 app.get("/api/tournaments", (req, res) => {
