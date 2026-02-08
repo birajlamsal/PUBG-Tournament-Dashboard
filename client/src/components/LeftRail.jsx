@@ -3,11 +3,11 @@ import { Home, Trophy, Newspaper, Swords, Users } from "lucide-react";
 
 const LeftRail = () => {
   const items = [
-    { icon: Home, label: "Home", to: "/" },
-    { icon: Trophy, label: "Tournaments", to: "/tournaments" },
-    { icon: Swords, label: "Scrims", to: "/scrims" },
-    { icon: Newspaper, label: "News", to: "/announcements" },
-    { icon: Users, label: "Contact us", to: "/contact" }
+    { icon: Home, label: "Home", to: "/pubg" },
+    { icon: Trophy, label: "Tournaments", to: "/pubg/tournaments" },
+    { icon: Swords, label: "Scrims", to: "/pubg/scrims" },
+    { icon: Newspaper, label: "News", to: "/pubg/announcements" },
+    { icon: Users, label: "Contact us", to: "/pubg/contact" }
   ];
 
   return (
@@ -19,6 +19,7 @@ const LeftRail = () => {
             <NavLink
               key={it.label}
               to={it.to}
+              end={it.to === "/pubg"}
               className={({ isActive }) =>
                 `twire-rail__item ${isActive ? "is-active" : ""}`
               }

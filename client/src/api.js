@@ -23,6 +23,19 @@ export const fetchTournamentLive = (id, params = {}) => {
   return fetch(`/api/tournaments/${id}/live${suffix}`).then(handleResponse);
 };
 
+export const fetchScrims = (params = {}) => {
+  const search = new URLSearchParams(params);
+  return fetch(`/api/scrims?${search.toString()}`).then(handleResponse);
+};
+
+export const fetchScrim = (id) => fetch(`/api/scrims/${id}`).then(handleResponse);
+
+export const fetchScrimLive = (id, params = {}) => {
+  const search = new URLSearchParams(params);
+  const suffix = search.toString() ? `?${search.toString()}` : "";
+  return fetch(`/api/scrims/${id}/live${suffix}`).then(handleResponse);
+};
+
 export const fetchMatches = () => fetch("/api/matches").then(handleResponse);
 
 export const fetchTeamStats = () => fetch("/api/team-stats").then(handleResponse);
@@ -73,6 +86,29 @@ export const adminUpdateTournament = (token, id, payload) =>
 
 export const adminDeleteTournament = (token, id) =>
   fetch(`/api/admin/tournaments/${id}`, {
+    method: "DELETE",
+    headers: withAuth(token)
+  });
+
+export const adminFetchScrims = (token) =>
+  fetch("/api/admin/scrims", { headers: withAuth(token) }).then(handleResponse);
+
+export const adminCreateScrim = (token, payload) =>
+  fetch("/api/admin/scrims", {
+    method: "POST",
+    headers: withAuth(token),
+    body: JSON.stringify(payload)
+  }).then(handleResponse);
+
+export const adminUpdateScrim = (token, id, payload) =>
+  fetch(`/api/admin/scrims/${id}`, {
+    method: "PUT",
+    headers: withAuth(token),
+    body: JSON.stringify(payload)
+  }).then(handleResponse);
+
+export const adminDeleteScrim = (token, id) =>
+  fetch(`/api/admin/scrims/${id}`, {
     method: "DELETE",
     headers: withAuth(token)
   });

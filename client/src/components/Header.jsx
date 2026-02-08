@@ -116,7 +116,7 @@ const Header = () => {
           <input placeholder="Search tournaments, teams..." />
         </div>
 
-        <a className="twire-contact twire-contact--desktop" href="/contact">
+        <a className="twire-contact twire-contact--desktop" href="/pubg/contact">
           Contact us
         </a>
       </div>

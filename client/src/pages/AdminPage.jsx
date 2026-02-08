@@ -5,26 +5,55 @@ import {
   adminFetchPlayers,
   adminFetchTeams,
   adminFetchTournaments,
+  adminFetchScrims,
   adminFetchAnnouncements,
   adminCreateParticipant,
   adminCreatePlayer,
   adminCreateTeam,
   adminCreateTournament,
+  adminCreateScrim,
   adminCreateAnnouncement,
   adminDeleteParticipant,
   adminDeletePlayer,
   adminDeleteTeam,
   adminDeleteTournament,
+  adminDeleteScrim,
   adminDeleteAnnouncement,
   adminUpdateParticipant,
   adminUpdatePlayer,
   adminUpdateTeam,
   adminUpdateTournament,
+  adminUpdateScrim,
   adminUpdateAnnouncement
 } from "../api";
 
 const emptyTournament = {
   tournament_id: "",
+  name: "",
+  description: "",
+  banner_url: "",
+  start_date: "",
+  end_date: "",
+  status: "upcoming",
+  registration_status: "closed",
+  mode: "squad",
+  match_type: "classic",
+  perspective: "TPP",
+  tier: "C",
+  prize_pool: "",
+  registration_charge: "",
+  featured: false,
+  max_slots: "",
+  region: "",
+  rules: "",
+  api_key_required: false,
+  custom_match_mode: false,
+  allow_non_custom: false,
+  custom_match_ids: []
+};
+
+const emptyScrim = {
+  scrim_id: "",
   name: "",
   description: "",
   banner_url: "",
@@ -115,6 +144,7 @@ const AdminPage = () => {
   const [loading, setLoading] = useState(false);
 
   const [tournaments, setTournaments] = useState([]);
+  const [scrims, setScrims] = useState([]);
   const [players, setPlayers] = useState([]);
   const [teams, setTeams] = useState([]);
   const [participants, setParticipants] = useState([]);
@@ -122,15 +152,19 @@ const AdminPage = () => {
 
   const [activeTab, setActiveTab] = useState("tournaments");
   const [tournamentForm, setTournamentForm] = useState(emptyTournament);
+  const [scrimForm, setScrimForm] = useState(emptyScrim);
   const [playerForm, setPlayerForm] = useState(emptyPlayer);
   const [teamForm, setTeamForm] = useState(emptyTeam);
   const [participantForm, setParticipantForm] = useState(emptyParticipant);
   const [announcementForm, setAnnouncementForm] = useState(emptyAnnouncement);
   const [showTournamentForm, setShowTournamentForm] = useState(false);
+  const [showScrimForm, setShowScrimForm] = useState(false);
   const [selectedTournamentId, setSelectedTournamentId] = useState("");
+  const [selectedScrimId, setSelectedScrimId] = useState("");
   const [showPlayerForm, setShowPlayerForm] = useState(false);
   const [showTeamForm, setShowTeamForm] = useState(false);
   const [tournamentView, setTournamentView] = useState("list");
+  const [scrimView, setScrimView] = useState("list");
   const [bulkParticipant, setBulkParticipant] = useState({
     type: "team",
     ids: "",
@@ -144,8 +178,10 @@ const AdminPage = () => {
     payment_status: "paid"
   });
   const [matchIdInput, setMatchIdInput] = useState("");
+  const [scrimMatchIdInput, setScrimMatchIdInput] = useState("");
 
   const isEditingTournament = Boolean(tournamentForm.tournament_id && tournaments.length);
+  const isEditingScrim = Boolean(scrimForm.scrim_id && scrims.length);
   const isEditingPlayer = Boolean(playerForm.player_id && players.length);
   const isEditingTeam = Boolean(teamForm.team_id && teams.length);
   const isEditingParticipant = Boolean(participantForm.participant_id && participants.length);
@@ -157,17 +193,23 @@ const AdminPage = () => {
     return tournaments.find((tournament) => tournament.tournament_id === selectedTournamentId);
   }, [tournaments, selectedTournamentId]);
 
+  const selectedScrim = useMemo(() => {
+    return scrims.find((scrim) => scrim.scrim_id === selectedScrimId);
+  }, [scrims, selectedScrimId]);
+
   const loadData = async (tokenValue) => {
     setLoading(true);
     try {
-      const [tData, pData, teamData, partData, announceData] = await Promise.all([
-        adminFetchTournaments(tokenValue),
-        adminFetchPlayers(tokenValue),
-        adminFetchTeams(tokenValue),
-        adminFetchParticipants(tokenValue),
-        adminFetchAnnouncements(tokenValue)
-      ]);
-      setTournaments(tData);
+    const [tData, sData, pData, teamData, partData, announceData] = await Promise.all([
+      adminFetchTournaments(tokenValue),
+      adminFetchScrims(tokenValue),
+      adminFetchPlayers(tokenValue),
+      adminFetchTeams(tokenValue),
+      adminFetchParticipants(tokenValue),
+      adminFetchAnnouncements(tokenValue)
+    ]);
+    setTournaments(tData);
+    setScrims(sData);
       setPlayers(pData);
       setTeams(teamData);
       setParticipants(partData);
@@ -237,6 +279,43 @@ const AdminPage = () => {
       }
       setTournamentForm(emptyTournament);
       setShowTournamentForm(false);
+      await loadData(token);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const onSubmitScrim = async (event) => {
+    event.preventDefault();
+    setError("");
+    if (scrimForm.start_date && scrimForm.end_date) {
+      const start = new Date(scrimForm.start_date);
+      const end = new Date(scrimForm.end_date);
+      if (
+        Number.isFinite(start.getTime()) &&
+        Number.isFinite(end.getTime()) &&
+        end < start
+      ) {
+        setError("End date cannot be before start date.");
+        return;
+      }
+    }
+    try {
+      const { scrim_id, custom_player_names: _custom_player_names, ...rest } = scrimForm;
+      const payload = {
+        ...rest,
+        prize_pool: Number(scrimForm.prize_pool || 0),
+        registration_charge: Number(scrimForm.registration_charge || 0),
+        max_slots: scrimForm.max_slots ? Number(scrimForm.max_slots) : null,
+        custom_match_ids: formatMatchIds(scrimForm.custom_match_ids)
+      };
+      if (isEditingScrim) {
+        await adminUpdateScrim(token, scrimForm.scrim_id, payload);
+      } else {
+        await adminCreateScrim(token, payload);
+      }
+      setScrimForm(emptyScrim);
+      setShowScrimForm(false);
       await loadData(token);
     } catch (err) {
       setError(err.message);
@@ -438,6 +517,16 @@ const AdminPage = () => {
     return Number.isFinite(diff) ? diff : "-";
   };
 
+  const scrimDays = (scrim) => {
+    if (!scrim?.start_date || !scrim?.end_date) {
+      return "-";
+    }
+    const start = new Date(scrim.start_date);
+    const end = new Date(scrim.end_date);
+    const diff = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    return Number.isFinite(diff) ? diff : "-";
+  };
+
   if (!token) {
     return (
       <main className="admin-page">
@@ -492,6 +581,7 @@ const AdminPage = () => {
       <section className="admin-tabs">
         {[
           { id: "tournaments", label: "Tournaments" },
+          { id: "scrims", label: "Scrims" },
           { id: "players", label: "Registered Players" },
           { id: "teams", label: "Registered Teams" },
           { id: "announcements", label: "Announcements" }
@@ -503,6 +593,9 @@ const AdminPage = () => {
               setActiveTab(tab.id);
               if (tab.id === "tournaments") {
                 setTournamentView("list");
+              }
+              if (tab.id === "scrims") {
+                setScrimView("list");
               }
             }}
           >
@@ -974,6 +1067,448 @@ const AdminPage = () => {
                     className="ghost-button"
                     type="button"
                     onClick={() => setTournamentForm(emptyTournament)}
+                  >
+                    Clear
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+        </section>
+      )}
+
+      {!loading && activeTab === "scrims" && (
+        <section className="admin-section">
+          <div className="admin-list">
+            <div className="admin-list-header">
+              <h3>Scrims</h3>
+              <div className="admin-list-actions">
+                <button
+                  className={scrimView === "list" ? "primary-button" : "ghost-button"}
+                  type="button"
+                  onClick={() => setScrimView("list")}
+                >
+                  List
+                </button>
+                <button
+                  className="primary-button"
+                  type="button"
+                  onClick={() => {
+                    setScrimForm(emptyScrim);
+                    setShowScrimForm(true);
+                  }}
+                >
+                  Add Scrim
+                </button>
+              </div>
+            </div>
+
+            {scrimView === "list" && (
+              <div className="table-wrapper admin-table">
+                <table className="stats-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>ID</th>
+                      <th>Status</th>
+                      <th>Mode</th>
+                      <th>FP/TPP</th>
+                      <th>Registration</th>
+                      <th>Prize Pool</th>
+                      <th>Start Date</th>
+                      <th>Days</th>
+                      <th>Featured</th>
+                      <th>Tier</th>
+                      <th>Region</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {scrims.map((scrim) => (
+                      <tr key={scrim.scrim_id}>
+                        <td>{scrim.name}</td>
+                        <td>{scrim.scrim_id}</td>
+                        <td>{scrim.status}</td>
+                        <td>{scrim.mode}</td>
+                        <td>{scrim.perspective || "TPP"}</td>
+                        <td>{scrim.registration_status}</td>
+                        <td>${scrim.prize_pool}</td>
+                        <td>{scrim.start_date || "-"}</td>
+                        <td>{scrimDays(scrim)}</td>
+                        <td>{scrim.featured ? "Yes" : "No"}</td>
+                        <td>{scrim.tier || "-"}</td>
+                        <td>{scrim.region || "-"}</td>
+                        <td>
+                          <div className="admin-list-actions">
+                            <button
+                              className="text-button"
+                              onClick={() => {
+                                setScrimForm({
+                                  ...emptyScrim,
+                                  ...scrim,
+                                  custom_match_ids: formatMatchIds(scrim.custom_match_ids)
+                                });
+                                setShowScrimForm(true);
+                                setScrimMatchIdInput("");
+                              }}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="text-button danger"
+                              onClick={async () => {
+                                await adminDeleteScrim(token, scrim.scrim_id);
+                                await loadData(token);
+                              }}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {scrims.length === 0 && <div className="empty-state">No scrims yet.</div>}
+              </div>
+            )}
+          </div>
+
+          {showScrimForm && (
+            <div className="admin-form">
+              <div className="admin-form-header">
+                <h2>{isEditingScrim ? "Edit Scrim" : "Create Scrim"}</h2>
+                <button
+                  className="ghost-button"
+                  type="button"
+                  onClick={() => {
+                    setScrimForm(emptyScrim);
+                    setShowScrimForm(false);
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+              <form onSubmit={onSubmitScrim}>
+                <div className="form-grid">
+                  <label>
+                    Name
+                    <input
+                      value={scrimForm.name}
+                      onChange={(event) =>
+                        setScrimForm((prev) => ({ ...prev, name: event.target.value }))
+                      }
+                      required
+                    />
+                  </label>
+                  <label>
+                    Status
+                    <select
+                      value={scrimForm.status}
+                      onChange={(event) =>
+                        setScrimForm((prev) => ({ ...prev, status: event.target.value }))
+                      }
+                    >
+                      <option value="upcoming">Upcoming</option>
+                      <option value="ongoing">Ongoing</option>
+                      <option value="completed">Completed</option>
+                    </select>
+                  </label>
+                  <label>
+                    Registration
+                    <select
+                      value={scrimForm.registration_status}
+                      onChange={(event) =>
+                        setScrimForm((prev) => ({
+                          ...prev,
+                          registration_status: event.target.value
+                        }))
+                      }
+                    >
+                      <option value="open">Open</option>
+                      <option value="closed">Closed</option>
+                    </select>
+                  </label>
+                  <label>
+                    Mode
+                    <select
+                      value={scrimForm.mode}
+                      onChange={(event) =>
+                        setScrimForm((prev) => ({ ...prev, mode: event.target.value }))
+                      }
+                    >
+                      <option value="solo">Solo</option>
+                      <option value="duo">Duo</option>
+                      <option value="squad">Squad</option>
+                    </select>
+                  </label>
+                  <label>
+                    Match Type
+                    <select
+                      value={scrimForm.match_type || "classic"}
+                      onChange={(event) =>
+                        setScrimForm((prev) => ({
+                          ...prev,
+                          match_type: event.target.value
+                        }))
+                      }
+                    >
+                      <option value="classic">Classic</option>
+                      <option value="team_deathmatch">Team Deathmatch</option>
+                    </select>
+                  </label>
+                  <label>
+                    FP / TPP
+                    <select
+                      value={scrimForm.perspective || "TPP"}
+                      onChange={(event) =>
+                        setScrimForm((prev) => ({
+                          ...prev,
+                          perspective: event.target.value
+                        }))
+                      }
+                    >
+                      <option value="FPP">FPP</option>
+                      <option value="TPP">TPP</option>
+                    </select>
+                  </label>
+                  <label>
+                    Start Date
+                    <input
+                      type="date"
+                      value={scrimForm.start_date}
+                      onChange={(event) =>
+                        setScrimForm((prev) => ({
+                          ...prev,
+                          start_date: event.target.value
+                        }))
+                      }
+                    />
+                  </label>
+                  <label>
+                    End Date
+                    <input
+                      type="date"
+                      value={scrimForm.end_date}
+                      min={scrimForm.start_date || undefined}
+                      onChange={(event) =>
+                        setScrimForm((prev) => ({ ...prev, end_date: event.target.value }))
+                      }
+                    />
+                  </label>
+                  <label>
+                    Prize Pool
+                    <input
+                      type="number"
+                      value={scrimForm.prize_pool}
+                      onChange={(event) =>
+                        setScrimForm((prev) => ({
+                          ...prev,
+                          prize_pool: event.target.value
+                        }))
+                      }
+                      required
+                    />
+                  </label>
+                  <label>
+                    Registration Charge
+                    <input
+                      type="number"
+                      value={scrimForm.registration_charge}
+                      onChange={(event) =>
+                        setScrimForm((prev) => ({
+                          ...prev,
+                          registration_charge: event.target.value
+                        }))
+                      }
+                      required
+                    />
+                  </label>
+                  <label>
+                    Max Slots
+                    <input
+                      type="number"
+                      value={scrimForm.max_slots}
+                      onChange={(event) =>
+                        setScrimForm((prev) => ({
+                          ...prev,
+                          max_slots: event.target.value
+                        }))
+                      }
+                    />
+                  </label>
+                  <label>
+                    Featured
+                    <select
+                      value={scrimForm.featured ? "true" : "false"}
+                      onChange={(event) =>
+                        setScrimForm((prev) => ({
+                          ...prev,
+                          featured: event.target.value === "true"
+                        }))
+                      }
+                    >
+                      <option value="false">False</option>
+                      <option value="true">True</option>
+                    </select>
+                  </label>
+                  <label>
+                    Region
+                    <select
+                      value={scrimForm.region}
+                      onChange={(event) =>
+                        setScrimForm((prev) => ({ ...prev, region: event.target.value }))
+                      }
+                    >
+                      <option value="">Select region</option>
+                      {regions.map((region) => (
+                        <option key={region} value={region}>
+                          {region}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    Tier
+                    <select
+                      value={scrimForm.tier || ""}
+                      onChange={(event) =>
+                        setScrimForm((prev) => ({ ...prev, tier: event.target.value }))
+                      }
+                    >
+                      <option value="">Select tier</option>
+                      <option value="S">S Tier</option>
+                      <option value="A">A Tier</option>
+                      <option value="B">B Tier</option>
+                      <option value="C">C Tier</option>
+                    </select>
+                  </label>
+                  <label>
+                    Banner URL
+                    <input
+                      value={scrimForm.banner_url}
+                      onChange={(event) =>
+                        setScrimForm((prev) => ({
+                          ...prev,
+                          banner_url: event.target.value
+                        }))
+                      }
+                    />
+                  </label>
+                  <label>
+                    API Key Required
+                    <select
+                      value={scrimForm.api_key_required ? "true" : "false"}
+                      onChange={(event) =>
+                        setScrimForm((prev) => ({
+                          ...prev,
+                          api_key_required: event.target.value === "true"
+                        }))
+                      }
+                    >
+                      <option value="false">False</option>
+                      <option value="true">True</option>
+                    </select>
+                  </label>
+                  <label>
+                    Custom Match Mode
+                    <select
+                      value={scrimForm.custom_match_mode ? "true" : "false"}
+                      onChange={(event) =>
+                        setScrimForm((prev) => ({
+                          ...prev,
+                          custom_match_mode: event.target.value === "true"
+                        }))
+                      }
+                    >
+                      <option value="false">False</option>
+                      <option value="true">True</option>
+                    </select>
+                  </label>
+                  <label>
+                    Custom Match IDs
+                    <div className="matchid-inline">
+                      <input
+                        value={scrimMatchIdInput}
+                        onChange={(event) => setScrimMatchIdInput(event.target.value)}
+                        placeholder="match-uuid"
+                      />
+                      <button
+                        type="button"
+                        className="ghost-button"
+                        onClick={() => {
+                          const trimmed = scrimMatchIdInput.trim();
+                          if (!trimmed) {
+                            return;
+                          }
+                          setScrimForm((prev) => ({
+                            ...prev,
+                            custom_match_ids: Array.from(
+                              new Set([...(prev.custom_match_ids || []), trimmed])
+                            )
+                          }));
+                          setScrimMatchIdInput("");
+                        }}
+                      >
+                        + Add
+                      </button>
+                    </div>
+                    <div className="matchid-active">
+                      {(scrimForm.custom_match_ids || []).length === 0 ? (
+                        <span className="muted">No match IDs added yet.</span>
+                      ) : (
+                        (scrimForm.custom_match_ids || []).map((id) => (
+                          <div key={id} className="matchid-chip">
+                            <span>{id}</span>
+                            <button
+                              type="button"
+                              className="text-button danger"
+                              onClick={() =>
+                                setScrimForm((prev) => ({
+                                  ...prev,
+                                  custom_match_ids: (prev.custom_match_ids || []).filter(
+                                    (item) => item !== id
+                                  )
+                                }))
+                              }
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </label>
+                </div>
+                <label>
+                  Description
+                  <textarea
+                    value={scrimForm.description}
+                    onChange={(event) =>
+                      setScrimForm((prev) => ({
+                        ...prev,
+                        description: event.target.value
+                      }))
+                    }
+                  />
+                </label>
+                <label>
+                  Rules
+                  <textarea
+                    value={scrimForm.rules}
+                    onChange={(event) =>
+                      setScrimForm((prev) => ({ ...prev, rules: event.target.value }))
+                    }
+                  />
+                </label>
+                <div className="form-actions">
+                  <button className="primary-button" type="submit">
+                    {isEditingScrim ? "Save Changes" : "Create Scrim"}
+                  </button>
+                  <button
+                    className="ghost-button"
+                    type="button"
+                    onClick={() => setScrimForm(emptyScrim)}
                   >
                     Clear
                   </button>

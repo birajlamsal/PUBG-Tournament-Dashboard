@@ -105,6 +105,11 @@ const sanitizeTournament = (tournament) => {
   return rest;
 };
 
+const sanitizeScrim = (scrim) => {
+  const { scrim_api_key, ...rest } = scrim;
+  return rest;
+};
+
 const getTierFromPrize = (prize) => {
   const value = Number(prize || 0);
   if (value >= 1000) {
@@ -345,6 +350,145 @@ app.get("/api/tournaments/:id/live", async (req, res) => {
   }
 });
 
+app.get("/api/scrims", (req, res) => {
+  const scrims = getCollection("scrims");
+  const { status, registration, mode, search, sort } = req.query;
+
+  let filtered = [...scrims];
+
+  if (status) {
+    filtered = filtered.filter((item) => item.status === status);
+  }
+  if (registration) {
+    filtered = filtered.filter((item) => item.registration_status === registration);
+  }
+  if (mode) {
+    filtered = filtered.filter((item) => item.mode === mode);
+  }
+  if (search) {
+    const term = String(search).toLowerCase();
+    filtered = filtered.filter((item) => item.name.toLowerCase().includes(term));
+  }
+
+  if (sort) {
+    if (sort === "start_date") {
+      filtered = sortByField(filtered, "start_date", "asc");
+    }
+    if (sort === "prize_pool") {
+      filtered = sortByField(filtered, "prize_pool", "desc");
+    }
+    if (sort === "registration_charge") {
+      filtered = sortByField(filtered, "registration_charge", "desc");
+    }
+  }
+
+  res.json(filtered.map(sanitizeScrim));
+});
+
+app.get("/api/scrims/:id", (req, res) => {
+  const scrims = getCollection("scrims");
+  const scrim = scrims.find((item) => item.scrim_id === req.params.id);
+  if (!scrim) {
+    return res.status(404).json({ error: "Scrim not found" });
+  }
+  const participants = getCollection("participants").filter(
+    (item) => item.tournament_id === req.params.id
+  );
+  res.json({
+    ...sanitizeScrim(scrim),
+    participants
+  });
+});
+
+app.get("/api/scrims/:id/live", async (req, res) => {
+  const scrims = getCollection("scrims");
+  const scrim = scrims.find((item) => item.scrim_id === req.params.id);
+  if (!scrim) {
+    return res.status(404).json({ error: "Scrim not found" });
+  }
+  if (!dbEnabled) {
+    return res.status(500).json({ error: "Database not configured" });
+  }
+  try {
+    const limit = Number(req.query.limit || 12);
+    const fresh = String(req.query.fresh || "").toLowerCase() === "true";
+    let matchIds = [];
+    if (scrim.custom_match_mode) {
+      matchIds = normalizeMatchIds(scrim.custom_match_ids);
+      if (!matchIds.length) {
+        return res.status(400).json({
+          error: "Custom match needs match IDs"
+        });
+      }
+    } else {
+      if (!scrim.pubg_tournament_id) {
+        return res.status(400).json({ error: "PUBG scrim ID not configured" });
+      }
+      if (!fresh) {
+        matchIds = await getTournamentMatchIds(scrim.scrim_id);
+      }
+      if (!matchIds.length || fresh) {
+        const apiKey = scrim.scrim_api_key || process.env.PUBG_API_KEY;
+        if (!apiKey) {
+          return res.status(400).json({ error: "PUBG API key not configured" });
+        }
+        matchIds = await fetchTournamentMatchIds({
+          apiKey,
+          tournamentId: scrim.pubg_tournament_id
+        });
+      }
+    }
+    matchIds = normalizeMatchIds(matchIds);
+    if (!matchIds.length) {
+      return res.status(400).json({ error: "No match IDs available" });
+    }
+
+    const limitedIds = matchIds.slice(0, limit);
+    await linkTournamentMatches(scrim.scrim_id, matchIds);
+    let storedMatches = await getMatchesByIds(limitedIds);
+    const missingIds = limitedIds.filter((id) => !storedMatches.has(id));
+
+    if (missingIds.length) {
+      const apiKey = scrim.scrim_api_key || process.env.PUBG_API_KEY;
+      if (!apiKey) {
+        return res.status(400).json({ error: "PUBG API key not configured" });
+      }
+      const fetchedPayloads = await fetchMatchPayloads({
+        apiKey,
+        matchIds: missingIds
+      });
+      await upsertMatches(fetchedPayloads);
+      storedMatches = await getMatchesByIds(limitedIds);
+    }
+
+    const orderedPayloads = limitedIds
+      .map((id) => storedMatches.get(id))
+      .filter(Boolean);
+    const allowNonCustom = scrim.allow_non_custom === true;
+    const data = aggregateMatchPayloads({
+      matchPayloads: orderedPayloads,
+      matchCount: matchIds.length,
+      cacheId: scrim.scrim_id,
+      limit,
+      fresh,
+      onlyCustom: scrim.custom_match_mode && !allowNonCustom,
+      tournamentId: scrim.pubg_tournament_id || scrim.scrim_id
+    });
+    res.json({
+      source: missingIds.length
+        ? scrim.custom_match_mode
+          ? "db+pubg-custom"
+          : "db+pubg"
+        : "db",
+      scrim_id: scrim.scrim_id,
+      pubg_tournament_id: scrim.pubg_tournament_id,
+      ...data
+    });
+  } catch (error) {
+    res.status(502).json({ error: "PUBG API error", details: error.message });
+  }
+});
+
 app.get("/api/matches", (req, res) => {
   const matches = getCollection("matches");
   const limit = Number(req.query.limit || 6);
@@ -510,6 +654,105 @@ app.delete("/api/admin/tournaments/:id", (req, res) => {
     return res.status(404).json({ error: "Tournament not found" });
   }
   setCollection("tournaments", filtered);
+  res.status(204).send();
+});
+
+app.get("/api/admin/scrims", (req, res) => {
+  res.json(getCollection("scrims"));
+});
+
+app.post("/api/admin/scrims", (req, res) => {
+  const scrims = getCollection("scrims");
+  const payload = req.body || {};
+  if (isInvalidDateRange(payload.start_date, payload.end_date)) {
+    return res.status(400).json({ error: "End date cannot be before start date." });
+  }
+  const scrim = {
+    scrim_id: payload.scrim_id || makeId("SE"),
+    name: payload.name,
+    description: payload.description || "",
+    banner_url: payload.banner_url || "",
+    start_date: payload.start_date,
+    end_date: payload.end_date,
+    status: payload.status || "upcoming",
+    registration_status: payload.registration_status || "closed",
+    mode: payload.mode || "squad",
+    match_type: payload.match_type || "classic",
+    perspective: payload.perspective || "TPP",
+    tier: payload.tier ? String(payload.tier).toUpperCase() : getTierFromPrize(payload.prize_pool),
+    prize_pool: Number(payload.prize_pool || 0),
+    registration_charge: Number(payload.registration_charge || 0),
+    featured: ensureBoolean(payload.featured) === true,
+    max_slots: payload.max_slots || null,
+    region: payload.region || "",
+    rules: payload.rules || "",
+    contact_discord: payload.contact_discord || "",
+    api_key_required: ensureBoolean(payload.api_key_required) === true,
+    scrim_api_key: payload.scrim_api_key || "",
+    api_provider: payload.api_provider || "PUBG",
+    pubg_tournament_id: payload.pubg_tournament_id || "",
+    custom_match_mode: ensureBoolean(payload.custom_match_mode) === true,
+    allow_non_custom: ensureBoolean(payload.allow_non_custom) === true,
+    custom_match_ids: normalizeMatchIds(payload.custom_match_ids)
+  };
+  scrims.push(scrim);
+  setCollection("scrims", scrims);
+  res.status(201).json(scrim);
+});
+
+app.put("/api/admin/scrims/:id", (req, res) => {
+  const scrims = getCollection("scrims");
+  const id = req.params.id;
+  const existing = scrims.find((item) => item.scrim_id === id);
+  if (!existing) {
+    return res.status(404).json({ error: "Scrim not found" });
+  }
+  const payload = req.body || {};
+  const startDate =
+    Object.prototype.hasOwnProperty.call(payload, "start_date")
+      ? payload.start_date
+      : existing.start_date;
+  const endDate =
+    Object.prototype.hasOwnProperty.call(payload, "end_date")
+      ? payload.end_date
+      : existing.end_date;
+  if (isInvalidDateRange(startDate, endDate)) {
+    return res.status(400).json({ error: "End date cannot be before start date." });
+  }
+  const updated = updateById(scrims, "scrim_id", id, (current) => {
+    const next = { ...payload };
+    if (Object.prototype.hasOwnProperty.call(payload, "tier")) {
+      next.tier = payload.tier ? String(payload.tier).toUpperCase() : "";
+    }
+    if (Object.prototype.hasOwnProperty.call(payload, "custom_match_mode")) {
+      next.custom_match_mode = ensureBoolean(payload.custom_match_mode) === true;
+    }
+    if (Object.prototype.hasOwnProperty.call(payload, "allow_non_custom")) {
+      next.allow_non_custom = ensureBoolean(payload.allow_non_custom) === true;
+    }
+    if (Object.prototype.hasOwnProperty.call(payload, "custom_match_ids")) {
+      next.custom_match_ids = normalizeMatchIds(payload.custom_match_ids);
+    }
+    return {
+      ...current,
+      ...next,
+      scrim_id: current.scrim_id
+    };
+  });
+  if (!updated) {
+    return res.status(404).json({ error: "Scrim not found" });
+  }
+  setCollection("scrims", scrims);
+  res.json(updated);
+});
+
+app.delete("/api/admin/scrims/:id", (req, res) => {
+  const scrims = getCollection("scrims");
+  const filtered = scrims.filter((item) => item.scrim_id !== req.params.id);
+  if (filtered.length === scrims.length) {
+    return res.status(404).json({ error: "Scrim not found" });
+  }
+  setCollection("scrims", filtered);
   res.status(204).send();
 });
 

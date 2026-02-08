@@ -77,15 +77,15 @@ const Footer = () => {
         </div>
         <div className="footer-links">
           <span className="footer-title">Quick Links</span>
-          <Link to="/tournaments">Tournaments</Link>
-          <Link to="/announcements">News</Link>
-          <Link to="/contact">Contact</Link>
+          <Link to="/pubg/tournaments">Tournaments</Link>
+          <Link to="/pubg/announcements">News</Link>
+          <Link to="/pubg/contact">Contact</Link>
         </div>
         <div className="footer-links footer-links--tools">
           <span className="footer-title">Tools</span>
-          <Link to="/matchidextract">Match ID Extractor</Link>
-          <Link to="/matchdetails">Match Details</Link>
-          <Link to="/admin">Admin Console</Link>
+          <Link to="/pubg/matchidextract">Match ID Extractor</Link>
+          <Link to="/pubg/matchdetails">Match Details</Link>
+          <Link to="/pubg/admin">Admin Console</Link>
         </div>
         <div className="footer-meta">
           <span>Admin-controlled data • PUBG API ready</span>

@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { fetchTournaments } from "../api";
+import { fetchScrims } from "../api";
 import useReveal from "../hooks/useReveal";
 
-const TournamentsPage = () => {
+const ScrimsPage = () => {
   useReveal();
   const [tournaments, setTournaments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,7 +22,7 @@ const TournamentsPage = () => {
     const load = async () => {
       setLoading(true);
       try {
-        const data = await fetchTournaments({
+        const data = await fetchScrims({
           search: filters.search,
           status: filters.status,
           registration: filters.registration,
@@ -105,15 +105,15 @@ const TournamentsPage = () => {
   return (
     <main className="tournaments-page">
       <section className="page-hero reveal">
-        <h1>All Tournaments</h1>
-        <p>Filter by status, region, and tier to find the next drop.</p>
+        <h1>All Scrims</h1>
+        <p>Filter by status, region, and tier to find the next scrim.</p>
       </section>
 
       <section className="filters reveal">
         <div className="filters-header">
           <div>
-            <h2>Filter tournaments</h2>
-            <p className="muted">Search, sort, and prioritize your next event.</p>
+            <h2>Filter scrims</h2>
+            <p className="muted">Search, sort, and prioritize your next scrim.</p>
           </div>
           <button
             type="button"
@@ -129,7 +129,7 @@ const TournamentsPage = () => {
             <span>Search</span>
             <input
               type="search"
-              placeholder="Search by tournament name"
+              placeholder="Search by scrim name"
               value={filters.search}
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, search: e.target.value }))
@@ -231,51 +231,51 @@ const TournamentsPage = () => {
         <div className="card-grid">
           {loading && <SkeletonCards count={6} />}
           {!loading && visible.length === 0 && (
-            <EmptyState message="No tournaments match these filters." />
+            <EmptyState message="No scrims match these filters." />
           )}
           {!loading &&
-            visible.map((tournament) => (
-              <div key={tournament.tournament_id} className="tournament-card full">
+            visible.map((scrim) => (
+              <div key={scrim.scrim_id} className="tournament-card full">
                 <div className="card-body">
-                  <span className={`status-badge ${tournament.status}`}>
-                    {tournament.status}
+                  <span className={`status-badge ${scrim.status}`}>
+                    {scrim.status}
                   </span>
-                  <h3>{tournament.name}</h3>
-                  <p>{tournament.description || "Details coming soon."}</p>
+                  <h3>{scrim.name}</h3>
+                  <p>{scrim.description || "Details coming soon."}</p>
                   <div className="card-meta">
                     <div>
                       <span>Prize Pool</span>
-                      <strong>${tournament.prize_pool}</strong>
+                      <strong>${scrim.prize_pool}</strong>
                     </div>
                     <div>
                       <span>Charge</span>
-                      <strong>${tournament.registration_charge}</strong>
+                      <strong>${scrim.registration_charge}</strong>
                     </div>
                     <div>
                       <span>Mode</span>
-                      <strong>{tournament.mode}</strong>
+                      <strong>{scrim.mode}</strong>
                     </div>
                     <div>
                       <span>Dates</span>
                       <strong>
-                        {tournament.start_date} - {tournament.end_date}
+                        {scrim.start_date} - {scrim.end_date}
                       </strong>
                     </div>
                   </div>
                   <div className="card-tags">
-                    <span className="chip">{tournament.region || "Global"}</span>
-                    <span className="chip">{getTierLabel(tournament)}</span>
+                    <span className="chip">{scrim.region || "Global"}</span>
+                    <span className="chip">{getTierLabel(scrim)}</span>
                   </div>
                 </div>
                 <div className="card-actions card-actions--footer">
                   <Link
-                    to={`/pubg/tournaments/${tournament.tournament_id}`}
+                    to={`/pubg/scrims/${scrim.scrim_id}`}
                     className="ghost-button"
                   >
                     Details
                   </Link>
                   <Link
-                    to={`/pubg/tournaments/${tournament.tournament_id}?tab=leaderboards`}
+                    to={`/pubg/scrims/${scrim.scrim_id}?tab=leaderboards`}
                     className="primary-button"
                   >
                     Leaderboards
@@ -301,4 +301,4 @@ const EmptyState = ({ message }) => (
   <div className="empty-state">{message}</div>
 );
 
-export default TournamentsPage;
+export default ScrimsPage;

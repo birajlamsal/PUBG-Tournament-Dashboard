@@ -98,7 +98,7 @@ const HomePage = () => {
 
               <div className="twire-title-row">
                 <SectionTitle title="Past tournaments" />
-                <Link className="twire-link" to="/tournaments">
+                <Link className="twire-link" to="/pubg/tournaments">
                   View more
                 </Link>
               </div>
@@ -191,7 +191,7 @@ const TournamentRow = ({ t, isLast }) => {
 
       <div className="twire-row__actions">
         {t.tournament_id ? (
-          <Link className="twire-cta" to={`/tournaments/${t.tournament_id}`}>
+          <Link className="twire-cta" to={`/pubg/tournaments/${t.tournament_id}`}>
             Details
           </Link>
         ) : (

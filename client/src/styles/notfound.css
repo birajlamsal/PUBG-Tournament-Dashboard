@@ -1,0 +1,138 @@
+.nf {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  position: relative;
+  overflow: hidden;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+.nf__backdrop {
+  position: absolute;
+  inset: -40px;
+  background:
+    radial-gradient(1000px 600px at 25% 40%, rgba(255, 255, 255, 0.07), transparent 60%),
+    radial-gradient(900px 550px at 70% 30%, rgba(255, 255, 255, 0.06), transparent 62%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 40%, rgba(0, 0, 0, 0.35) 100%),
+    repeating-linear-gradient(
+      115deg,
+      rgba(255, 255, 255, 0.08) 0px,
+      rgba(255, 255, 255, 0.08) 2px,
+      rgba(0, 0, 0, 0) 14px,
+      rgba(0, 0, 0, 0) 24px
+    );
+  filter: contrast(1.05) saturate(0.9);
+  transform: rotate(-2deg) scale(1.06);
+}
+
+.nf__grain {
+  position: absolute;
+  inset: -80px;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.25'/%3E%3C/svg%3E");
+  opacity: 0.15;
+  mix-blend-mode: overlay;
+}
+
+.nf__card {
+  position: relative;
+  z-index: 2;
+  width: min(920px, 94vw);
+  text-align: center;
+  padding: 36px 24px 28px;
+  border-radius: 22px;
+}
+
+.nf__tiles {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.nf__tile {
+  width: 120px;
+  height: 120px;
+  border-radius: 34px;
+  background: #ffffff;
+  color: #0b0d10;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 64px;
+  letter-spacing: 1px;
+  box-shadow:
+    0 20px 45px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.nf__title {
+  font-size: clamp(34px, 4vw, 54px);
+  margin: 8px 0 10px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+.nf__sub {
+  margin: 0 auto;
+  max-width: 760px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.nf__code {
+  margin-top: 12px;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.nf__btnWrap {
+  margin-top: 22px;
+  display: flex;
+  justify-content: center;
+}
+
+.nf__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.96);
+  color: #0b0d10;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.35);
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.nf__btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45);
+  background: #ffffff;
+}
+
+.nf__btn:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 520px) {
+  .nf__tiles {
+    gap: 12px;
+  }
+  .nf__tile {
+    width: 92px;
+    height: 92px;
+    border-radius: 28px;
+    font-size: 52px;
+  }
+  .nf__card {
+    padding: 28px 16px 20px;
+  }
+}

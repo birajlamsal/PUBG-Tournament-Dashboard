@@ -5,6 +5,7 @@ const dataDir = path.join(__dirname, "..", "data");
 
 const files = {
   tournaments: "tournaments.json",
+  scrims: "scrims.json",
   players: "players.json",
   teams: "teams.json",
   matches: "matches.json",
