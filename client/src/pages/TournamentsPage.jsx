@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { fetchTournaments } from "../api";
+import { formatDate } from "../utils/formatDate";
 import useReveal from "../hooks/useReveal";
 
 const TournamentsPage = () => {
@@ -255,31 +256,37 @@ const TournamentsPage = () => {
                       <span>Mode</span>
                       <strong>{tournament.mode}</strong>
                     </div>
-                    <div>
-                      <span>Dates</span>
-                      <strong>
-                        {tournament.start_date} - {tournament.end_date}
-                      </strong>
-                    </div>
                   </div>
                   <div className="card-tags">
                     <span className="chip">{tournament.region || "Global"}</span>
                     <span className="chip">{getTierLabel(tournament)}</span>
                   </div>
                 </div>
-                <div className="card-actions card-actions--footer">
-                  <Link
-                    to={`/pubg/tournaments/${tournament.tournament_id}`}
-                    className="ghost-button"
-                  >
-                    Details
-                  </Link>
-                  <Link
-                    to={`/pubg/tournaments/${tournament.tournament_id}?tab=leaderboards`}
-                    className="primary-button"
-                  >
-                    Leaderboards
-                  </Link>
+                <div className="card-actions card-actions--footer card-actions--stack">
+                  <div className="card-meta__date-row card-meta__date-row--actions">
+                    <div className="card-meta__date-card">
+                      <span>Start Date</span>
+                      <strong>{formatDate(tournament.start_date)}</strong>
+                    </div>
+                    <div className="card-meta__date-card">
+                      <span>End Date</span>
+                      <strong>{formatDate(tournament.end_date)}</strong>
+                    </div>
+                  </div>
+                  <div className="card-actions__buttons">
+                    <Link
+                      to={`/pubg/tournaments/${tournament.tournament_id}`}
+                      className="ghost-button"
+                    >
+                      Details
+                    </Link>
+                    <Link
+                      to={`/pubg/tournaments/${tournament.tournament_id}?tab=leaderboards`}
+                      className="primary-button"
+                    >
+                      Leaderboards
+                    </Link>
+                  </div>
                 </div>
               </div>
             ))}

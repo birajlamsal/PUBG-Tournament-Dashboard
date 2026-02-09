@@ -9,6 +9,7 @@ import {
   fetchWinners
 } from "../api";
 import useReveal from "../hooks/useReveal";
+import { formatDate } from "../utils/formatDate";
 
 const mapImageByName = {
   Erangel: "/images/maps/Erangel.png",
@@ -347,7 +348,7 @@ const ScrimDetailPage = () => {
       match_detail:
         match.match_detail ||
         `${match.game_mode || "Match"} • ${
-          match.created_at ? new Date(match.created_at).toLocaleString() : "-"
+          formatDate(match.created_at)
         }`,
       winner_team_name:
         slotNameMap.get(String(match.winner_team_id)) ||
@@ -494,7 +495,8 @@ const ScrimDetailPage = () => {
                 <span className="chip">{tournament.perspective || "TPP"}</span>
               </div>
               <div className="detail-meta">
-                <MetaCard label="Dates" value={`${tournament.start_date || "-"} • ${tournament.end_date || "-"}`} />
+                <MetaCard label="Start Date" value={formatDate(tournament.start_date)} />
+                <MetaCard label="End Date" value={formatDate(tournament.end_date)} />
                 <MetaCard label="Prize Pool" value={`$${tournament.prize_pool}`} />
                 <MetaCard label="Registration" value={tournament.registration_status} />
                 <MetaCard label="Server" value={tournament.region || "-"} />
@@ -536,7 +538,7 @@ const ScrimDetailPage = () => {
             <div className="detail-card">
               <h3>Tournament Details</h3>
               <ul>
-                <li>End Date: {tournament.end_date || "-"}</li>
+                <li>End Date: {formatDate(tournament.end_date)}</li>
                 <li>Registration Charge: ${tournament.registration_charge}</li>
                 <li>Max Slots: {tournament.max_slots || "-"}</li>
                 <li>API Provider: {tournament.api_provider}</li>
@@ -851,9 +853,7 @@ const ScrimDetailPage = () => {
                             <div>
                               <span>Created</span>
                               <strong>
-                                {match.created_at
-                                  ? new Date(match.created_at).toLocaleString()
-                                  : "-"}
+                                {formatDate(match.created_at)}
                               </strong>
                             </div>
                             <div>

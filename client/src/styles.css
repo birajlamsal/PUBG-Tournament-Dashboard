@@ -555,6 +555,27 @@ main {
   align-items: center;
 }
 
+.card-actions--footer .ghost-button,
+.card-actions--footer .primary-button {
+  height: 40px;
+}
+
+.card-actions--stack {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.card-actions__buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.card-meta__date-row--actions {
+  margin-top: 0;
+}
+
 .card-top h3,
 .match-card h3,
 .winner-card h3 {
@@ -589,6 +610,45 @@ main {
   gap: 12px;
 }
 
+.card-meta--start {
+  text-align: left;
+}
+
+.card-meta--end {
+  text-align: right;
+}
+
+.card-meta--inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.card-meta__date-card {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.card-meta__date-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+@media (max-width: 520px) {
+  .card-meta__date-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 .card-tags {
   display: flex;
   flex-wrap: wrap;
@@ -609,11 +669,15 @@ main {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 1px;
+  display: inline-block;
+  margin-right: 6px;
 }
 
 .card-bottom strong,
 .card-meta strong {
   font-size: 16px;
+  white-space: nowrap;
+  display: inline-block;
 }
 
 .status-badge {
@@ -1330,6 +1394,60 @@ main {
   display: flex;
   flex-direction: column;
   gap: 18px;
+}
+
+.tournaments-page .filters,
+.scrims-page .filters {
+  position: static;
+  z-index: 20;
+  margin: 0 auto;
+  padding: 18px 18px 24px;
+  background: linear-gradient(180deg, rgba(7, 11, 18, 0.95), rgba(7, 11, 18, 0.75));
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+}
+
+.tournaments-page .section,
+.scrims-page .section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 18px 48px;
+}
+
+.tournaments-page .card-grid,
+.scrims-page .card-grid {
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 720px) {
+  .tournaments-page .card-grid,
+  .scrims-page .card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .tournaments-page .card-grid,
+  .scrims-page .card-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.tournaments-page .tournament-card,
+.scrims-page .tournament-card {
+  padding: 16px;
+  gap: 12px;
+}
+
+.tournaments-page .card-body p,
+.scrims-page .card-body p {
+  line-height: 1.5;
+}
+
+.tournaments-page .card-actions--footer,
+.scrims-page .card-actions--footer {
+  justify-content: flex-end;
 }
 
 .filters-header {

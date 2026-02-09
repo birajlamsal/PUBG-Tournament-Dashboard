@@ -26,6 +26,7 @@ import {
   adminUpdateScrim,
   adminUpdateAnnouncement
 } from "../api";
+import { formatDate } from "../utils/formatDate";
 
 const emptyTournament = {
   tournament_id: "",
@@ -689,7 +690,7 @@ const AdminPage = () => {
                         <td>{tournament.perspective || "TPP"}</td>
                         <td>{tournament.registration_status}</td>
                         <td>${tournament.prize_pool}</td>
-                        <td>{tournament.start_date || "-"}</td>
+                        <td>{formatDate(tournament.start_date)}</td>
                         <td>{tournamentDays(tournament)}</td>
                         <td>{tournament.featured ? "Yes" : "No"}</td>
                         <td>{tournament.tier || "-"}</td>
@@ -1133,7 +1134,7 @@ const AdminPage = () => {
                         <td>{scrim.perspective || "TPP"}</td>
                         <td>{scrim.registration_status}</td>
                         <td>${scrim.prize_pool}</td>
-                        <td>{scrim.start_date || "-"}</td>
+                        <td>{formatDate(scrim.start_date)}</td>
                         <td>{scrimDays(scrim)}</td>
                         <td>{scrim.featured ? "Yes" : "No"}</td>
                         <td>{scrim.tier || "-"}</td>
@@ -1594,7 +1595,7 @@ const AdminPage = () => {
                   </div>
                   <div>
                     <span className="muted">Start Date</span>
-                    <strong>{selectedTournament.start_date || "-"}</strong>
+                    <strong>{formatDate(selectedTournament.start_date)}</strong>
                   </div>
                   <div>
                     <span className="muted">Days</span>
@@ -2472,7 +2473,7 @@ const AdminPage = () => {
                     <tr key={note.announcement_id}>
                       <td>{note.title}</td>
                       <td>{note.type}</td>
-                      <td>{new Date(note.created_at).toLocaleString()}</td>
+                      <td>{formatDate(note.created_at)}</td>
                       <td>
                         <div className="admin-list-actions">
                           <button

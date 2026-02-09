@@ -9,6 +9,7 @@ import {
   fetchWinners
 } from "../api";
 import useReveal from "../hooks/useReveal";
+import { formatDate } from "../utils/formatDate";
 
 const mapImageByName = {
   Erangel: "/images/maps/Erangel.png",
@@ -347,7 +348,7 @@ const TournamentDetailPage = () => {
       match_detail:
         match.match_detail ||
         `${match.game_mode || "Match"} • ${
-          match.created_at ? new Date(match.created_at).toLocaleString() : "-"
+          formatDate(match.created_at)
         }`,
       winner_team_name:
         slotNameMap.get(String(match.winner_team_id)) ||
@@ -494,7 +495,8 @@ const TournamentDetailPage = () => {
                 <span className="chip">{tournament.perspective || "TPP"}</span>
               </div>
               <div className="detail-meta">
-                <MetaCard label="Dates" value={`${tournament.start_date || "-"} • ${tournament.end_date || "-"}`} />
+                <MetaCard label="Start Date" value={formatDate(tournament.start_date)} />
+                <MetaCard label="End Date" value={formatDate(tournament.end_date)} />
                 <MetaCard label="Prize Pool" value={`$${tournament.prize_pool}`} />
                 <MetaCard label="Registration" value={tournament.registration_status} />
                 <MetaCard label="Server" value={tournament.region || "-"} />
@@ -510,33 +512,13 @@ const TournamentDetailPage = () => {
         </div>
       </section>
 
-      <section className="section tab-section sticky-tabs">
-        <div className="tab-group centered">
-          {[
-            { id: "overview", label: "Overview" },
-            { id: "leaderboards", label: "Leaderboards" },
-            { id: "matches", label: "Matches" },
-            { id: "teams", label: "Teams" },
-            { id: "players", label: "Players" }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              className={activeTab === tab.id ? "active" : ""}
-              onClick={() => handleTabChange(tab.id)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </section>
-
       {activeTab === "overview" && (
         <>
           <section className="detail-grid">
             <div className="detail-card">
               <h3>Tournament Details</h3>
               <ul>
-                <li>End Date: {tournament.end_date || "-"}</li>
+                <li>End Date: {formatDate(tournament.end_date)}</li>
                 <li>Registration Charge: ${tournament.registration_charge}</li>
                 <li>Max Slots: {tournament.max_slots || "-"}</li>
                 <li>API Provider: {tournament.api_provider}</li>
@@ -568,61 +550,6 @@ const TournamentDetailPage = () => {
             </div>
           </section>
 
-          {tournament.status === "completed" && (
-            <section className="section">
-              <div className="section-header">
-                <h2>Winners Spotlight</h2>
-              </div>
-              {!result && !winnerList && (
-                <div className="empty-state">Winners not published yet.</div>
-              )}
-              {winnerList && (
-                <div className="winner-spotlight">
-                  <div className="winner-spotlight__header">
-                    <span className="winner-spotlight__kicker">Final standings</span>
-                    <h3>{result?.tournament_name || tournament?.name || "Tournament"}</h3>
-                  </div>
-                  <div className="winner-spotlight__rows">
-                    {winnerList.map((winner) => (
-                      <div
-                        key={`${winner.place}-${winner.name}`}
-                        className={`winner-row winner-row--${winner.place}`}
-                      >
-                        <div className="winner-row__place">
-                          <span className="place-number">{winner.place}</span>
-                          <span className="place-label">Place</span>
-                        </div>
-                        <div className="winner-row__title">
-                          <strong>{winner.name}</strong>
-                        </div>
-                        <div className="winner-row__stats">
-                          <div>
-                            <span>Points</span>
-                            <strong>{winner.points}</strong>
-                          </div>
-                          <div>
-                            <span>Kills</span>
-                            <strong>{winner.kills}</strong>
-                          </div>
-                        </div>
-                        <div className="winner-row__accent" aria-hidden="true" />
-                      </div>
-                    ))}
-                  </div>
-                  {result?.most_kills && (
-                    <div className="kills-highlight">
-                      <span className="badge">🔥 Most Kills</span>
-                      <h4>{result.most_kills.winner}</h4>
-                      <p>
-                        {result.most_kills.kills} kills over{" "}
-                        {result.most_kills.matches_played} matches
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </section>
-          )}
         </>
       )}
 
@@ -634,13 +561,11 @@ const TournamentDetailPage = () => {
           {tournament.participants?.length ? (
             <div className="participant-groups two-column">
               {getGroupedPlayers(tournament.participants, teamMap, tournament.participants).map(
-                ({ teamId, players, slotNumber }) => (
+                ({ teamId, teamName, players, slotNumber }) => (
                   <div key={teamId} className="group-card">
                     <div className="group-header">
                       <div className="group-title">
-                        <strong className="team-name">
-                          {teamId === "Unassigned" ? "Unassigned" : teamMap.get(teamId) || teamId}
-                        </strong>
+                        <strong className="team-name">{teamName}</strong>
                       </div>
                       {slotNumber ? (
                         <span className="muted team-slot">Slot #{slotNumber}</span>
@@ -700,7 +625,77 @@ const TournamentDetailPage = () => {
         </section>
       )}
 
+      {tournament.status === "completed" && (
+        <section className="section">
+          <div className="section-header">
+            <h2>Winners Spotlight</h2>
+          </div>
+          {!result && !winnerList && (
+            <div className="empty-state">Winners not published yet.</div>
+          )}
+          {winnerList && (
+            <div className="winner-spotlight">
+              <div className="winner-spotlight__header">
+                <span className="winner-spotlight__kicker">Final standings</span>
+                <h3>{result?.tournament_name || tournament?.name || "Tournament"}</h3>
+              </div>
+              <div className="winner-spotlight__rows">
+                {winnerList.map((winner) => (
+                  <div
+                    key={`${winner.place}-${winner.name}`}
+                    className={`winner-row winner-row--${winner.place}`}
+                  >
+                    <div className="winner-row__place">
+                      <span className="place-number">{winner.place}</span>
+                      <span className="place-label">Place</span>
+                    </div>
+                    <div className="winner-row__title">
+                      <strong>{winner.name}</strong>
+                    </div>
+                    <div className="winner-row__stats">
+                      <div>
+                        <span>Points</span>
+                        <strong>{winner.points}</strong>
+                      </div>
+                      <div>
+                        <span>Kills</span>
+                        <strong>{winner.kills}</strong>
+                      </div>
+                    </div>
+                    <div className="winner-row__accent" aria-hidden="true" />
+                  </div>
+                ))}
+              </div>
+              {result?.most_kills && (
+                <div className="kills-highlight">
+                  <span className="badge">🔥 Most Kills</span>
+                  <h4>{result.most_kills.winner}</h4>
+                  <p>
+                    {result.most_kills.kills} kills over{" "}
+                    {result.most_kills.matches_played} matches
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+      )}
+
       <section className="section">
+        <div className="tab-group centered tab-group--results">
+          {[
+            { id: "overview", label: "Overview" },
+            { id: "players", label: "Players" }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              className={activeTab === tab.id ? "active" : ""}
+              onClick={() => handleTabChange(tab.id)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
         <div className="section-header">
           <h2>{activeTab === "overview" ? "Results" : resultTitle}</h2>
         </div>
@@ -851,9 +846,7 @@ const TournamentDetailPage = () => {
                             <div>
                               <span>Created</span>
                               <strong>
-                                {match.created_at
-                                  ? new Date(match.created_at).toLocaleString()
-                                  : "-"}
+                                {formatDate(match.created_at)}
                               </strong>
                             </div>
                             <div>
@@ -1100,10 +1093,12 @@ const getGroupedPlayers = (participants = [], teamMap, allParticipants = []) => 
 
   const groups = new Map();
   players.forEach((participant) => {
-    const raw = participant.notes?.startsWith("team:")
+    const noteSlot = participant.notes?.startsWith("team:")
       ? participant.notes.replace("team:", "")
-      : "Unassigned";
-    const resolvedTeamId = slotToTeamId.get(raw) || raw;
+      : null;
+    const linkedTeamId = participant.linked_team_id || null;
+    const resolvedTeamId =
+      linkedTeamId || (noteSlot ? slotToTeamId.get(noteSlot) || noteSlot : "Unassigned");
     if (!groups.has(resolvedTeamId)) {
       groups.set(resolvedTeamId, []);
     }

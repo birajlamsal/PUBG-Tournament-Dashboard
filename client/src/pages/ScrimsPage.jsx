@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { fetchScrims } from "../api";
+import { formatDate } from "../utils/formatDate";
 import useReveal from "../hooks/useReveal";
 
 const ScrimsPage = () => {
@@ -255,31 +256,37 @@ const ScrimsPage = () => {
                       <span>Mode</span>
                       <strong>{scrim.mode}</strong>
                     </div>
-                    <div>
-                      <span>Dates</span>
-                      <strong>
-                        {scrim.start_date} - {scrim.end_date}
-                      </strong>
-                    </div>
                   </div>
                   <div className="card-tags">
                     <span className="chip">{scrim.region || "Global"}</span>
                     <span className="chip">{getTierLabel(scrim)}</span>
                   </div>
                 </div>
-                <div className="card-actions card-actions--footer">
-                  <Link
-                    to={`/pubg/scrims/${scrim.scrim_id}`}
-                    className="ghost-button"
-                  >
-                    Details
-                  </Link>
-                  <Link
-                    to={`/pubg/scrims/${scrim.scrim_id}?tab=leaderboards`}
-                    className="primary-button"
-                  >
-                    Leaderboards
-                  </Link>
+                <div className="card-actions card-actions--footer card-actions--stack">
+                  <div className="card-meta__date-row card-meta__date-row--actions">
+                    <div className="card-meta__date-card">
+                      <span>Start Date</span>
+                      <strong>{formatDate(scrim.start_date)}</strong>
+                    </div>
+                    <div className="card-meta__date-card">
+                      <span>End Date</span>
+                      <strong>{formatDate(scrim.end_date)}</strong>
+                    </div>
+                  </div>
+                  <div className="card-actions__buttons">
+                    <Link
+                      to={`/pubg/scrims/${scrim.scrim_id}`}
+                      className="ghost-button"
+                    >
+                      Details
+                    </Link>
+                    <Link
+                      to={`/pubg/scrims/${scrim.scrim_id}?tab=leaderboards`}
+                      className="primary-button"
+                    >
+                      Leaderboards
+                    </Link>
+                  </div>
                 </div>
               </div>
             ))}
