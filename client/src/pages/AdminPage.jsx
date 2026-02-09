@@ -407,15 +407,30 @@ const AdminPage = () => {
   };
 
   const nextTeamSlot = (currentParticipants) => {
-    const taken = new Set(
-      currentParticipants
-        .filter((participant) => participant.type === "team")
-        .map((participant) => participant.slot_number)
-        .filter(Boolean)
-    );
-    for (let slot = 1; slot <= 25; slot += 1) {
-      if (!taken.has(slot)) {
-        return slot;
+    const slots = currentParticipants
+      .filter((participant) => participant.type === "team")
+      .map((participant) => participant.slot_number)
+      .filter(Boolean)
+      .map((value) => Number(value))
+      .filter((value) => Number.isFinite(value));
+    if (!slots.length) {
+      return 1;
+    }
+    return Math.max(...slots) + 1;
+  };
+
+  const resolveTeamId = (rawValue) => {
+    const raw = String(rawValue || "").trim();
+    if (!raw) {
+      return null;
+    }
+    if (rosterNames.teamMap.has(raw)) {
+      return raw;
+    }
+    const lower = raw.toLowerCase();
+    for (const [id, name] of rosterNames.teamMap.entries()) {
+      if (String(name || "").toLowerCase() === lower) {
+        return id;
       }
     }
     return null;
@@ -426,19 +441,29 @@ const AdminPage = () => {
       return;
     }
     const participantConfig = { ...bulkParticipant, ...override };
-    const ids = bulkParticipant.ids
+    const idsInput = bulkParticipant.ids
       .split(",")
       .map((id) => id.trim())
       .filter(Boolean);
-    if (!ids.length) {
+    if (!idsInput.length) {
       setError("Enter at least one ID.");
       return;
     }
-    const invalidIds = ids.filter((id) =>
-      participantConfig.type === "team"
-        ? !rosterNames.teamMap.has(id)
-        : !rosterNames.playerMap.has(id)
-    );
+    let ids = idsInput;
+    let invalidIds = [];
+    if (participantConfig.type === "team") {
+      ids = [];
+      idsInput.forEach((id) => {
+        const resolvedId = resolveTeamId(id);
+        if (resolvedId) {
+          ids.push(resolvedId);
+        } else {
+          invalidIds.push(id);
+        }
+      });
+    } else {
+      invalidIds = idsInput.filter((id) => !rosterNames.playerMap.has(id));
+    }
     if (invalidIds.length) {
       setError(`Invalid ${participantConfig.type} ID(s): ${invalidIds.join(", ")}`);
       return;
@@ -446,7 +471,9 @@ const AdminPage = () => {
     setError("");
     setLoading(true);
     try {
-      let currentParticipants = [...participants];
+      let currentParticipants = participants.filter(
+        (participant) => participant.tournament_id === selectedTournamentId
+      );
       for (const id of ids) {
         const slotNumber =
           participantConfig.type === "team" ? nextTeamSlot(currentParticipants) : null;
@@ -1661,19 +1688,24 @@ const AdminPage = () => {
                 ))}
               </select>
             </label>
+            {!selectedTournamentId && (
+              <div className="empty-state">Select a tournament to enable participant actions.</div>
+            )}
           </div>
+
+          {error && <div className="alert">{error}</div>}
 
           <div className="admin-form">
             <h3>Add Team</h3>
             <div className="form-grid">
               <label>
-                Team IDs (comma separated)
+                Team IDs or names (comma separated)
                 <input
                   value={bulkParticipant.ids}
                   onChange={(event) =>
                     setBulkParticipant((prev) => ({ ...prev, ids: event.target.value }))
                   }
-                  placeholder="TE12345, TE67890"
+                  placeholder="TE12345, Pro Squad"
                   disabled={!selectedTournamentId}
                 />
               </label>
@@ -1754,13 +1786,13 @@ const AdminPage = () => {
             <h3>Add Players To Team</h3>
             <div className="form-grid">
               <label>
-                Team ID
+                Team ID or name
                 <input
                   value={teamRoster.team_id}
                   onChange={(event) =>
                     setTeamRoster((prev) => ({ ...prev, team_id: event.target.value }))
                   }
-                  placeholder="TE12345"
+                  placeholder="TE12345 or Pro Squad"
                   disabled={!selectedTournamentId}
                 />
               </label>
@@ -1784,13 +1816,18 @@ const AdminPage = () => {
                   if (!selectedTournamentId) {
                     return;
                   }
-                  const teamExists = rosterNames.teamMap.has(teamRoster.team_id);
+                  const resolvedTeamId = resolveTeamId(teamRoster.team_id);
+                  if (!resolvedTeamId) {
+                    setError("Team ID does not exist in registered teams.");
+                    return;
+                  }
+                  const teamExists = rosterNames.teamMap.has(resolvedTeamId);
                   if (!teamExists) {
                     setError("Team ID does not exist in registered teams.");
                     return;
                   }
                   const teamInTournament = tournamentParticipants.teams.some(
-                    (participant) => participant.linked_team_id === teamRoster.team_id
+                    (participant) => participant.linked_team_id === resolvedTeamId
                   );
                   if (!teamInTournament) {
                     setError("Team is not registered in this tournament.");
@@ -1800,7 +1837,7 @@ const AdminPage = () => {
                     .split(",")
                     .map((id) => id.trim())
                     .filter(Boolean);
-                  if (!teamRoster.team_id || !ids.length) {
+                  if (!resolvedTeamId || !ids.length) {
                     setError("Enter a team ID and at least one player ID.");
                     return;
                   }
@@ -1817,11 +1854,11 @@ const AdminPage = () => {
                         tournament_id: selectedTournamentId,
                         type: "player",
                         linked_player_id: id,
-                        linked_team_id: null,
+                        linked_team_id: resolvedTeamId,
                         status: teamRoster.status,
                         payment_status: teamRoster.payment_status,
                         slot_number: null,
-                        notes: `team:${teamRoster.team_id}`
+                        notes: `team:${resolvedTeamId}`
                       });
                     }
                     setTeamRoster((prev) => ({ ...prev, player_ids: "" }));

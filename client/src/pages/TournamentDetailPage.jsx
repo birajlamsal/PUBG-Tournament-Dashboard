@@ -437,7 +437,9 @@ const TournamentDetailPage = () => {
   }, [tournament]);
 
   const resultTitle =
-    resultTab === "leaderboard"
+    activeTab === "players"
+      ? "Roster"
+      : resultTab === "leaderboard"
       ? "Leaderboards"
       : resultTab === "matches"
       ? "Matches"
@@ -553,44 +555,7 @@ const TournamentDetailPage = () => {
         </>
       )}
 
-      {activeTab === "players" && (
-        <section className="section">
-          <div className="section-header">
-            <h2>Players in Tournament</h2>
-          </div>
-          {tournament.participants?.length ? (
-            <div className="participant-groups two-column">
-              {getGroupedPlayers(tournament.participants, teamMap, tournament.participants).map(
-                ({ teamId, teamName, players, slotNumber }) => (
-                  <div key={teamId} className="group-card">
-                    <div className="group-header">
-                      <div className="group-title">
-                        <strong className="team-name">{teamName}</strong>
-                      </div>
-                      {slotNumber ? (
-                        <span className="muted team-slot">Slot #{slotNumber}</span>
-                      ) : (
-                        <span className="muted team-slot">No slot</span>
-                      )}
-                      <span className="muted">{players.length} players</span>
-                    </div>
-                    <ul className="participant-list">
-                      {players.map((participant) => (
-                        <li key={participant.participant_id}>
-                          <span className="badge">player</span>
-                          <span>{playerMap.get(participant.linked_player_id) || "-"}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )
-              )}
-            </div>
-          ) : (
-            <div className="empty-state">Player list hidden or empty.</div>
-          )}
-        </section>
-      )}
+      {activeTab === "players" && null}
 
       {activeTab === "teams" && (
         <section className="section">
@@ -703,30 +668,70 @@ const TournamentDetailPage = () => {
           className="stats-card"
           data-mode={activeTab === "overview" ? "overview" : "single"}
         >
-          <div className="stats-card-header">
-            <div>
-              <h3>{resultTitle}</h3>
-              <span className="muted">{liveData ? "PUBG API" : "Manual"} data</span>
-            </div>
-            {activeTab === "overview" && (
-              <div className="tab-group">
-                {[
-                  { id: "leaderboard", label: "Leaderboard" },
-                  { id: "matches", label: "Matches" },
-                  { id: "playerStats", label: "Player Stats" },
-                  { id: "teamStats", label: "Team Stats" }
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    className={resultTab === tab.id ? "active" : ""}
-                    onClick={() => setResultTab(tab.id)}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-            )}
+        <div className="stats-card-header">
+          <div>
+            <h3>{resultTitle}</h3>
+            <span className="muted">
+              {activeTab === "players"
+                ? "Admin roster"
+                : liveData
+                ? "PUBG API"
+                : "Manual"}{" "}
+              data
+            </span>
           </div>
+          {activeTab === "overview" && (
+            <div className="tab-group">
+              {[
+                { id: "leaderboard", label: "Leaderboard" },
+                { id: "matches", label: "Matches" },
+                { id: "playerStats", label: "Player Stats" },
+                { id: "teamStats", label: "Team Stats" }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  className={resultTab === tab.id ? "active" : ""}
+                  onClick={() => setResultTab(tab.id)}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        {activeTab === "players" ? (
+          tournament.participants?.length ? (
+            <div className="participant-groups two-column">
+              {getGroupedPlayers(tournament.participants, teamMap, tournament.participants).map(
+                ({ teamId, teamName, players, slotNumber }) => (
+                  <div key={teamId} className="group-card">
+                    <div className="group-header">
+                      <div className="group-title">
+                        <strong className="team-name">{teamName}</strong>
+                      </div>
+                      {slotNumber ? (
+                        <span className="muted team-slot">Slot #{slotNumber}</span>
+                      ) : (
+                        <span className="muted team-slot">No slot</span>
+                      )}
+                      <span className="muted">{players.length} players</span>
+                    </div>
+                    <ul className="participant-list">
+                      {players.map((participant) => (
+                        <li key={participant.participant_id}>
+                          <span className="badge">player</span>
+                          <span>{playerMap.get(participant.linked_player_id) || "-"}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )
+              )}
+            </div>
+          ) : (
+            <div className="empty-state">Player list hidden or empty.</div>
+          )
+        ) : (
           <div className="table-wrapper leaderboard-table">
                 {resultTab === "leaderboard" && (
                   <table className="stats-table leaderboard">
@@ -1026,8 +1031,9 @@ const TournamentDetailPage = () => {
                   </table>
                 )}
           </div>
-        </div>
-      </section>
+        )}
+      </div>
+    </section>
     </main>
   );
 };

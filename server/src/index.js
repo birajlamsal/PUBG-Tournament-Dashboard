@@ -1010,6 +1010,48 @@ app.get("/api/admin/participants", async (req, res) => {
 app.post("/api/admin/participants", async (req, res) => {
   const payload = req.body || {};
   try {
+    if (!payload.tournament_id) {
+      return res.status(400).json({ error: "Tournament ID is required." });
+    }
+    const tournamentParticipants = await listParticipantsByTournament(
+      payload.tournament_id
+    );
+    if (payload.type === "player") {
+      const teamId = payload.linked_team_id || null;
+      if (!teamId) {
+        return res.status(400).json({ error: "Player must be linked to a team." });
+      }
+      const teamExists = tournamentParticipants.some(
+        (participant) =>
+          participant.type === "team" && participant.linked_team_id === teamId
+      );
+      if (!teamExists) {
+        return res.status(400).json({
+          error: "Team is not registered in this tournament."
+        });
+      }
+      const playerExists = tournamentParticipants.some(
+        (participant) =>
+          participant.type === "player" &&
+          participant.linked_player_id === payload.linked_player_id
+      );
+      if (playerExists) {
+        return res.status(409).json({
+          error: "Player is already registered in this tournament."
+        });
+      }
+    } else if (payload.type === "team") {
+      const teamExists = tournamentParticipants.some(
+        (participant) =>
+          participant.type === "team" &&
+          participant.linked_team_id === payload.linked_team_id
+      );
+      if (teamExists) {
+        return res.status(409).json({
+          error: "Team is already registered in this tournament."
+        });
+      }
+    }
     const participant = await insertParticipant({
       ...payload,
       participant_id: payload.participant_id || nanoid(10)
