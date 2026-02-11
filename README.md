@@ -88,3 +88,6 @@ MIT — see `LICENSE`.
 For database -Supabase 
 For fronted - vercel
 For backend server - Render 
+
+
+everything hosted till now is done for free . Everything in cloud . 
